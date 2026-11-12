@@ -66,6 +66,10 @@ class Action:
     #                               plays, as a Pose's look (x, y; + y is down): eyes that move (an eye roll)
     topple: Optional[Callable[[float], float]] = None   # u -> degrees the whole figure leans over toward its side,
     #                               about its feet (a faint); it must be back at 0 by the end
+    fly: Optional[Callable[[float], float]] = None   # u -> how far what it holds has flown from its hand to where
+    #                               the option "fly" says (0 in the hand .. 1 there): a throw
+    lift: Optional[Callable[[float], float]] = None   # u -> how far up a load in front of it is (0 on the ground
+    #                               .. 1 carried): a crate picked up, carried and put down
 
 
 def _giggle(u, t, side):
@@ -1319,6 +1323,13 @@ GAITS = {
     "trip": Gait(0.5, 1.9, 24, 26, 20, elbow=8, rock=2.5, squash=0.015, lean=2, twist=5, stumble=0.5),
     # it glides backwards while its legs walk forwards: no rock, no lift, the heels peeling up in turn
     "moonwalk": Gait(0.3, 1.3, 22, 36, 8, elbow=20, rock=0.0, lift=0.0, squash=0.0, lean=5, twist=3, back=True),
+    # with a load (2026-11-12). Behind something heavy: leaning into it, both arms out in front, short hard steps
+    "push": Gait(0.2, 1.3, 18, 26, 0, rock=2, lift=0.0, squash=0.03, lean=15, twist=2, shoulders=8),
+    # ... and hauling it: backwards, leaning away from it, the arms out in front
+    "pull": Gait(0.2, 1.3, 16, 22, 0, rock=2, lift=0.0, squash=0.03, lean=-12, twist=2, shoulders=6, back=True),
+    # carrying something in both arms: slow, leaning back a little under it, rocking; and the same backwards
+    "carry": Gait(0.3, 1.5, 18, 20, 0, rock=3.5, lift=0.004, squash=0.03, lean=-5, twist=2),
+    "carry-back": Gait(0.3, 1.5, 18, 20, 0, rock=3.5, lift=0.004, squash=0.03, lean=-5, twist=2, back=True),
 }
 # ways of going that are not a gait: one long jump; over on its hands and round, sideways; up on to a step
 LEAPS = ("leap", "cartwheel", "climb-step")
@@ -1464,6 +1475,112 @@ ACTIONS.update({
                        wrist=lambda u, t: 14 * _shaken(u) * math.sin(2 * math.pi * 6.0 * t),
                        tail=lambda u, t: (0.0, 18.0 * _popped(u)),
                        ears=lambda u, t, side: (*(2 * (-14 * _popped(u),)), -6 * _popped(u))),
+})
+
+
+# ---- with things, and two together (2026-11-12): a throw and a catch, a load carried, a book, keys, a phone, a
+# handshake
+THROW, LAND = 0.45, 0.8      # the shares of a throw at which the thing leaves the hand, and arrives
+
+
+def _throw(u, t, side):
+    k, back, go = _k(side), _peak(u, 0.27, 0.13), _peak(u, 0.5, 0.1)
+    return {"spine.front_back": 7 * back - 13 * go, "chest.front_back": 4 * back - 7 * go,
+            "spine.left_right": k * (5 * back - 4 * go), "head.nod_down_up": 4 * back - 5 * go,
+            f"{side}_upper_arm.down_up": 34 * back, f"{side}_lower_arm.stretch": -30 * back + 14 * go,
+            f"{side}_shoulder.down_up": 8 * back}
+
+
+def _caught(u: float) -> float:
+    return _peak(u, 0.47, 0.08)                                      # the moment it lands in the hand
+
+
+def _catch(u, t, side):
+    e, hit = _bell(u, 0.25, 0.3), _caught(u)
+    return {"head.nod_down_up": 6 * e - 7 * hit, "chest.front_back": 3 * e - 6 * hit, "spine.front_back": -5 * hit,
+            f"{side}_lower_arm.stretch": -16 * hit, "spine.left_right": 3 * _k(side) * e}
+
+
+def _lifting(u: float) -> float:
+    return _bell(u, 0.16, 0.16)                                      # up off the ground, carried, and down again
+
+
+def _lift(u, t, side):
+    bend = _peak(u, 0.07, 0.07) + _peak(u, 0.93, 0.07)               # down to it, and down with it
+    out = {"spine.front_back": -16 * bend - 3 * _lifting(u), "chest.front_back": -7 * bend,
+           "head.nod_down_up": -8 * bend}
+    for s in SIDES:
+        out.update({f"{s}_upper_leg.front_back": -14 * bend, f"{s}_lower_leg.stretch": -24 * bend,
+                    f"{s}_shoulder.down_up": 5 * _lifting(u)})
+    return out
+
+
+def _read(u, t, side):
+    e, turn = _bell(u, 0.15, 0.2), _peak(u, 0.58, 0.05)
+    line = (1.1 * t) % 1.0
+    return {"head.nod_down_up": -11 * e + 3 * turn, "neck.nod_down_up": -3 * e,
+            "head.turn_left_right": 4 * e * (line - 0.5), "head.tilt_left_right": 3 * _k(side) * e,
+            f"{side}_lower_arm.stretch": 10 * turn, f"{side}_upper_arm.down_up": 6 * turn}
+
+
+def _read_gaze(u, t):
+    e = _bell(u, 0.15, 0.2)
+    return (0.7 * e * (2 * ((1.1 * t) % 1.0) - 1.0), 0.75 * e)        # along a line, and back to the next
+
+
+def _type(u, t, side):
+    e = _bell(u, 0.15, 0.2)
+    left, right = math.sin(2 * math.pi * 6.5 * t), math.sin(2 * math.pi * 6.5 * t + 2.2)
+    burst = 0.5 + 0.5 * math.sin(2 * math.pi * 0.9 * t)             # it types in bursts
+    return {"head.nod_down_up": -8 * e + 1.5 * e * burst, "head.turn_left_right": 3 * e * math.sin(2 * math.pi * 0.6 * t),
+            "left_lower_arm.stretch": 9 * e * burst * left, "right_lower_arm.stretch": 9 * e * burst * right,
+            "left_upper_arm.down_up": 3 * e * burst * left, "right_upper_arm.down_up": 3 * e * burst * right,
+            "spine.front_back": -3 * e}
+
+
+def _phone(u, t, side):
+    e, k = _bell(u, 0.18, 0.2), _k(side)
+    yes = max(0.0, math.sin(2 * math.pi * 0.8 * t)) ** 3            # mm-hm, now and then
+    return {"head.tilt_left_right": 8 * k * e, "head.turn_left_right": -6 * k * e, "head.nod_down_up": -5 * e * yes,
+            "spine.left_right": 2 * k * e, f"{side}_shoulder.down_up": 7 * e}
+
+
+def _shake_hands(u, t, side):
+    e, pump = _bell(u, 0.25, 0.3), math.sin(2 * math.pi * 2.6 * t)
+    return {f"{side}_lower_arm.stretch": 10 * e * pump, f"{side}_upper_arm.down_up": 6 * e * pump,
+            "spine.front_back": -4 * e, "head.nod_down_up": -3 * e + 3 * e * pump, "spine.left_right": 2 * _k(side) * e}
+
+
+ACTIONS.update({
+    # a throw: the arm goes back, then forward, and what it holds leaves the hand for where the option "fly" says
+    # (film.throw aims it at another's hands)
+    "throw": Action(2.0, _throw, face={"brows": "angry", "mouth": "open"}, reach=True,
+                    fly=lambda u: max(0.0, min(1.0, (u - THROW) / (LAND - THROW))),
+                    squash=lambda u, t: -0.05 * _peak(u, 0.27, 0.13) + 0.07 * _peak(u, 0.5, 0.1),
+                    wrist=lambda u, t: -18 * _peak(u, 0.5, 0.08), tail=lambda u, t: (0.0, 14.0 * _peak(u, 0.5, 0.1))),
+    # a catch: a hand up for it, and a give as it lands (film.throw puts the thing in that hand)
+    "catch": Action(1.5, _catch, face={"eyes": "wide", "brows": "raised", "mouth": "open"}, reach=True,
+                    squash=lambda u, t: -0.07 * _caught(u),
+                    ears=lambda u, t, side: (*(2 * (-10 * _caught(u),)), -5 * _caught(u))),
+    # a load picked up and held in both arms, for as long as `seconds` says, and put down (Actor.carry)
+    "lift": Action(2.4, _lift, face={"brows": "worried", "mouth": "flat"}, gesture="carry", both=True, lift=_lifting,
+                   squash=lambda u, t: -0.06 * (_peak(u, 0.07, 0.07) + _peak(u, 0.93, 0.07))),
+    # both hands on a load in front of it, for as long as `seconds` says: braced to push it or to haul it
+    # (Actor.push, Actor.pull)
+    "brace": Action(2.0, lambda u, t, side: {"head.nod_down_up": -5 * _bell(u, 0.15, 0.15),
+                                             "left_shoulder.down_up": 6 * _bell(u, 0.15, 0.15),
+                                             "right_shoulder.down_up": 6 * _bell(u, 0.15, 0.15)},
+                    face={"brows": "angry", "mouth": "flat"}, gesture="carry", both=True),
+    # reading: a book held up in both hands, the head down to it, the eyes going along the lines, a page turned
+    "read": Action(3.4, _read, face={"mouth": "flat"}, gesture="read", both=True, gaze=_read_gaze,
+                   tip=lambda u, t: 38 * _bell(u, 0.15, 0.2), lid=0.25),
+    # typing: both hands low in front, tapping in bursts, the eyes on the screen
+    "type": Action(2.8, _type, face={"mouth": "flat", "brows": "angry"}, gesture="type", both=True,
+                   gaze=lambda u, t: (0.25 * math.sin(2 * math.pi * 0.6 * t), 0.6 * _bell(u, 0.15, 0.2))),
+    # on the phone: a hand up beside the head, the head tipped to it, a nod now and then
+    "phone": Action(3.2, _phone, face={"mouth": "smile", "look": (-0.4, -0.2)}, gesture="ear"),
+    # a handshake: the hand of its side out to another's, and pumped (film.handshake gives both the same point)
+    "handshake": Action(2.2, _shake_hands, face={"mouth": "smile"}, reach=True, tail=_wag(10.0, 2.6, 4.0)),
 })
 
 

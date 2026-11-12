@@ -40,7 +40,14 @@ COLOURS = {
 
 COLOURS.update({"item.gift": "#E0605A", "item.band": "#F6D24A", "item.ball": "#58A6E6",   # what a figure may hold
                 "item.glass": "#E4EEF2", "item.wine": "#8E2A3A", "item.beer": "#E9A93A", "item.foam": "#FFFBF0",
-                "item.bottle": "#2F6B4A", "item.label": "#F4EBD8", "item.cork": "#C9A46B"})
+                "item.bottle": "#2F6B4A", "item.label": "#F4EBD8", "item.cork": "#C9A46B",
+                "item.crate": "#C9955A", "item.slat": "#A87442", "item.book": "#4F7FBF", "item.page": "#FBF6E9",
+                "item.phone": "#2B2F36", "item.screen": "#8FD3FF"})
+# loads: things too big for a hand, that stand on the ground in front of a figure or are carried in both arms
+# (their radii across, up and deep; how far in front of the figure their middle is)
+LOADS = {"block": ((0.13, 0.12, 0.13), 0.37), "crate": ((0.085, 0.085, 0.085), 0.305),
+         "long-crate": ((0.1, 0.07, 0.23), 0.45)}
+CARRIED = 0.21      # how high the middle of a carried load is (m)
 
 
 def register(registry: Registry) -> None:
@@ -301,6 +308,13 @@ class MascotFigure(Mannequin):
     item: str = ""
     item_tilt: float = 0.0
     pop: float = 0.0
+    # a thing thrown: how far it has flown (0 in the hand .. 1 arrived) to a point given from the figure (m);
+    # a load (LOADS): how far up it has been lifted (0 on the ground in front of the figure .. 1 carried)
+    item_fly: float = 0.0
+    item_to_x: float = 0.0
+    item_to_y: float = 0.0
+    item_to_z: float = 0.0
+    item_lift: float = 0.0
     # its fixed list of parts for the film it acts in (characters.fixed.settle gives it): one object for each part
     # it ever shows, sized by keys, so the scene holds the figure once
     fixed: Any = field(default=None, repr=False, compare=False)
@@ -564,8 +578,20 @@ class MascotFigure(Mannequin):
         s, e, w = self.arm_points(frames, side)   # as the arm is drawn (MascotFigure._arm)
         # a drink is drawn half as big again as it would be: at its true size it is a speck in a paw
         big = 1.5 if thing in ("glass", "mug", "bottle", "bottle-open") else 1.0
-        lift = {"glass": 0.062, "mug": 0.058, "bottle": 0.07, "bottle-open": 0.07}.get(thing, 0.052) * big
+        lift = {"glass": 0.062, "mug": 0.058, "bottle": 0.07, "bottle-open": 0.07, "phone": 0.03}.get(thing, 0.052) * big
         at = w + _scaled(_unit(w - e), self.spec.arm_r * 1.1) + Vec3(0.0, lift, 0.03)
+        if thing in LOADS:      # on the ground in front of it, or up in its arms
+            radii, ahead = LOADS[thing]
+            up = max(0.0, min(1.0, self.item_lift))
+            at = Vec3(0.0, radii[1] - self.hop + up * (CARRIED - radii[1] + self.hop), ahead)
+        elif thing == "book":   # in both hands, when they are together
+            other = self.arm_points(frames, "left" if side == "right" else "right")[2]
+            if (other - w).length < 0.22:
+                at = Vec3(0.5 * (w.x + other.x), 0.5 * (w.y + other.y) + 0.05, max(w.z, other.z) + 0.05)
+        if self.item_fly > 0.0:  # thrown: on its way from the hand to where it was sent, in an arc
+            p = min(1.0, self.item_fly)
+            to_ = Vec3(self.item_to_x, self.item_to_y, self.item_to_z)
+            at = at + _scaled(to_ - at, p) + Vec3(0.0, (0.1 + 0.22 * (to_ - at).length) * 4 * p * (1 - p), 0.0)
         c, sn = math.cos(math.radians(self.item_tilt)), math.sin(math.radians(self.item_tilt))
         turn = ((1.0, 0.0, 0.0), (0.0, c, sn), (0.0, -sn, c))       # its top goes back, toward the face
         out_side = 1.0 if side == "right" else -1.0
@@ -582,6 +608,19 @@ class MascotFigure(Mannequin):
         def rod(name, p0, p1, r0, r1, material):
             return tube(name, to(p0), to(p1), r0 * big, r1 * big, material, looks=self.looks, samples=(10, 12))
 
+        if thing in LOADS:      # a wooden crate: a box with a slat round it
+            radii = LOADS[thing][0]
+            return [solid("item/crate", (0, 0, 0), radii, "item.crate", 0.3, 0.3, (28, 18)),
+                    solid("itemband/slat", (0, 0, 0), (radii[0] * 1.03, radii[1] * 0.22, radii[2] * 1.03), "item.slat",
+                          0.3, 0.3, (28, 12))]
+        if thing == "book":     # an open book: the cover, and the two pages on it
+            return [solid("item/cover", (0, 0, 0), (0.095, 0.007, 0.066), "item.book", 0.3, 0.5, (24, 10)),
+                    solid("itempage/left", (-0.046, 0.007, 0), (0.043, 0.007, 0.06), "item.page", 0.3, 0.5, (18, 10)),
+                    solid("itempage/right", (0.046, 0.007, 0), (0.043, 0.007, 0.06), "item.page", 0.3, 0.5, (18, 10))]
+        if thing == "phone":    # a phone: a dark slab, its screen lit
+            return [solid("item/phone", (0, 0, 0), (0.019, 0.034, 0.006), "item.phone", 0.35, 0.35, (20, 14)),
+                    solid("itemscreen/screen", (0, 0.002, 0.004), (0.015, 0.027, 0.004), "item.screen", 0.35, 0.35,
+                          (16, 12))]
         if thing == "ball":
             return [solid("item/ball", (0, 0, 0), (0.04, 0.04, 0.04), "item.ball"),
                     solid("itemband/band", (0, 0, 0), (0.0405, 0.012, 0.0405), "item.band", samples=(16, 8))]
@@ -887,6 +926,12 @@ def gesture(who: str, kind: str) -> dict[str, float]:
         "gasp": {s: Vec3((1 if s == "right" else -1) * 0.04, mouth.y + 0.02, mouth.z + 0.06) for s in ("left", "right")},
         "eyes": {s: Vec3((1 if s == "right" else -1) * 0.32 * r[0], c[1] + 0.18 * r[1] + lift - 0.85 * hand,
                          c[2] + 0.98 * r[2] + 0.35 * hand) for s in ("left", "right")},
+        # with things (characters.actions): both hands under a load, both holding a book up, both at a keyboard;
+        # a hand beside the head, low (a phone at the ear)
+        "carry": {s: off(s, -0.02, -0.1, 0.15) for s in ("left", "right")},
+        "read": {s: off(s, -0.045, -0.075, 0.18) for s in ("left", "right")},
+        "type": {s: off(s, -0.03, -0.09, 0.17) for s in ("left", "right")},
+        "ear": {"right": Vec3(r[0] + 0.03, c[1] - 0.45 * r[1] + lift, c[2] + 0.3 * r[2])},
         "show": {"right": out("right", 1.15, -0.1, 0.4)},
         "halt": {"right": out("right", 0.6, 0.3, 1.0)},
         "thumb": {"right": out("right", 0.7, 0.2, 0.8)},

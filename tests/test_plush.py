@@ -317,3 +317,50 @@ def test_more_ways_of_going():
     assert abs(track.at(late + 8.5)["step_y"]) < 1e-6                   # ... until it steps down
     up = actor.fig.posed(dict(track.at(late + 5.0)))
     assert abs(up.transform.position.y - 0.12) < 0.02
+
+
+def test_things_thrown_carried_read_and_two_together():
+    f, a = one("bear")
+    b = f.add("bip", "idle", at=(-0.85, 0, 0))                           # `one` puts the bear at the middle
+    f.throw(1.0, a, b, "ball", seed=3)
+    f.handshake(4.0, a, b)
+    a.hold(6.5, "book"), b.hold(6.5, "phone")
+    a.read(7.0), b.phone(7.0)
+    a.hold(11.0, None).do(11.2, "type")
+    b.hold(11.0, "block")
+    b.push(12.0, (-0.6, 0.0)).pull(15.0, (-0.85, 0.0))
+    b.hold(17.5, None)
+    f.carry_together(19.5, a, b, (0.0, 0.8))
+    f.perform(27.0)
+    ta, tb = f.loc.motion[id(a.fig)], f.loc.motion[id(b.fig)]
+    long = motion.ACTIONS["throw"].seconds
+    assert a.holding(1.0) == (a.holding(1.0)[0], "ball") and a.holding(1.0 + long) is None
+    assert b.holding(1.0 + long)[1] == "ball"                            # it changed hands as it landed
+    mid = ta.at(1.0 + long * 0.5 * (motion.THROW + motion.LAND))
+    assert 0.2 < mid["item_fly"] < 0.8 and mid["item_to_y"] > 0.2        # on its way, to a hand held up
+    ball = lambda t: next(p for p in a.fig.posed(dict(ta.at(t)))._drawn(a.fig.posed(dict(ta.at(t))).frames())
+                          if p.name == "item/ball")
+    assert abs(ball(1.0 + long * 0.62).at.x) > abs(ball(1.0 + long * 0.3).at.x) + 0.15   # it left the hand
+    names = lambda fig, track, t: {p.name for p in fig.posed(dict(track.at(t)))._drawn(fig.posed(dict(track.at(t))).frames())}
+    assert "item/cover" in names(a.fig, ta, 8.5) and "item/phone" in names(b.fig, tb, 8.5)
+    assert tb.at(13.0)["item"].endswith(":block") and "item/crate" in names(b.fig, tb, 13.0)
+    assert tb.at(13.0).get("item_lift", 0.0) == 0.0                      # pushed: it stays on the ground
+    assert ta.at(22.0)["item_lift"] > 0.9 and ta.at(26.9)["item_lift"] < 0.05   # carried, and put down
+    assert abs((ta.at(26.5)["step_z"] - tb.at(26.5)["step_z"])) < 1e-6   # the two went the same way, as far
+    assert abs(ta.at(26.5)["step_z"] - 0.8) < 1e-6
+    assert all(n in film.can("bear")["actions"] for n in ("throw", "catch", "lift", "brace", "read", "type", "phone",
+                                                          "handshake"))
+    with pytest.raises(film.FilmError, match="apart"):
+        f.carry_together(40.0, a, f.add("cat", "idle", at=(3, 0, 0)), (0, 0))
+    with pytest.raises(film.FilmError, match="not a thing to throw"):
+        f.throw(41.0, a, b, "crate")
+    from characters import cloth, export, mascots3d
+    assert all(cloth.kind(name) in cloth.KINDS for name in mascots3d.COLOURS if name.startswith("item."))
+    for moment in (2.3, 8.5, 13.0, 22.0):                                # a renderer with cloth can draw them
+        assert export.frame(f.loc.at(moment), "film")["parts"]
+    g = film.Film("held", size=(320, 320), fps=12)                       # a toast after a thing was put away
+    x, y = g.add("bear", "idle", at=(0.35, 0, 0)), g.add("cat", "idle", at=(-0.35, 0, 0))
+    g.camera((0, 1, 10), look_at=(0, 0.4, 0), lens=80)
+    g.give(1.0, x, y, "gift")
+    g.toast(5.0, x, y)
+    assert x.holding(5.0)[1] == "glass" and x.holding(0.5)[1] == "gift"

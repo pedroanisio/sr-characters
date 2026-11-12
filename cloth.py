@@ -18,6 +18,12 @@ EXACT = {
     # vinyl people (characters.vinyl3d): moulded vinyl, glossy black shoes and leather, metal badges
     "vinyl.shoe": "plastic", "officer.black": "plastic", "officer.gold": "metal", "officer.buckle": "metal",
     "lp.gold": "metal", "lp.steel": "metal", "lp.iris": "eye", "lp.white": "shine",
+    # what a figure holds (mascots3d.COLOURS "item.*"): glass and drink shine, a ball and a phone are plastic, the
+    # rest is card, cloth and wood with no pile
+    "item.gift": "felt", "item.band": "felt", "item.ball": "plastic", "item.glass": "gloss", "item.wine": "gloss",
+    "item.beer": "gloss", "item.foam": "felt", "item.bottle": "gloss", "item.label": "felt", "item.cork": "felt",
+    "item.crate": "felt", "item.slat": "felt", "item.book": "felt", "item.page": "felt", "item.phone": "plastic",
+    "item.screen": "glow",
     "lp.patent": "satin",      # a cap's peak: matte with a soft light on it (the low-poly finish; vinyl in the others)
 }
 # then by how the name starts: a whole family in one material

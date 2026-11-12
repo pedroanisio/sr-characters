@@ -88,7 +88,8 @@ MOVES = ("body", "blinks", "gaze", "squash", "hop", "travel", "paws", "ears", "t
 LYING = 84.0         # degrees over a figure that lies on its side is
 WAYS = ("waddle", "hops", *motion.GAITS, *motion.LEAPS)        # how a character goes from one place to another: go(style=)
 SCREEN_ONLY = ("screen-icon",)                  # actions only a character with a screen for a face can play
-THINGS = ("gift", "ball", "glass", "mug", "bottle")   # what a character can hold (a glass of wine, a mug of beer)
+THINGS = ("gift", "ball", "glass", "mug", "bottle", "book", "phone", *mascots3d.LOADS)   # what a character can hold
+LOADS = tuple(mascots3d.LOADS)    # ... the ones too big for a hand: on the ground in front of it, or in its arms
 DRINKS = ("glass", "mug")
 
 
@@ -239,7 +240,7 @@ class Actor:
         return self.do(time, "drink", side=held[0], seed=seed)
 
     def pop_cork(self, time: float, seed: Optional[int] = None) -> "Actor":
-        """At `time` it pops the bottle it holds (it has one from the start of the film if it holds none): a
+        """At `time` it pops the bottle it holds (if it holds none, it has one: from the start of the film, or just before if it held other things): a
         shake, the cork flies, the foam bursts, and the bottle stays open."""
         held = self.holding(time)
         if held is None or held[1] != "bottle":
@@ -248,6 +249,62 @@ class Actor:
         self.do(time, "pop-cork", side=held[0], seed=seed, sync=True)
         self.holds.append((float(time) + motion.ACTIONS["pop-cork"].seconds * motion.POP, f"{held[0]}:bottle-open"))
         return self
+
+    def read(self, time: float, seconds: Optional[float] = None, seed: Optional[int] = None) -> "Actor":
+        """At `time` it reads: a book up in both hands (if it holds none, it has one: from the start of the film, or just before if it held other things),
+        the head down to it, the eyes along the lines, a page turned."""
+        held = self.holding(time)
+        if held is None or held[1] != "book":
+            self.hold(self._from(time), "book")
+            held = ("right", "book")
+        return self.do(time, "read", side=held[0], seed=seed, **({"seconds": seconds} if seconds else {}))
+
+    def phone(self, time: float, seconds: Optional[float] = None, seed: Optional[int] = None) -> "Actor":
+        """At `time` it is on the phone: the phone it holds (it has one if it holds none, as for read()) goes up
+        beside its head, the head tips to it, it nods now and then."""
+        held = self.holding(time)
+        if held is None or held[1] != "phone":
+            self.hold(self._from(time), "phone")
+            held = ("right", "phone")
+        return self.do(time, "phone", side=held[0], seed=seed, **({"seconds": seconds} if seconds else {}))
+
+    def _load(self, time: float, thing: str) -> None:
+        if thing not in LOADS:
+            raise FilmError(f"{thing!r} is not a load; there are {', '.join(LOADS)}")
+        held = self.holding(time)
+        if held is None or held[1] != thing:
+            self.hold(self._from(time), thing)
+
+    def _from(self, time: float) -> float:
+        """When a thing it is about to use appears: at the start of the film, or, if it has held other things
+        by then, a moment before it uses this one (what it held at the start stays as it was)."""
+        return 0.0 if not self.holds else max(0.0, time - 0.6)
+
+    def _trip_time(self, to: Sequence[float], style: str) -> float:
+        was = self.trips[-1][1] if self.trips else (tuple(motion.Vec3.of(self.fig.at))[0], tuple(motion.Vec3.of(self.fig.at))[2])
+        return max(0.5, math.hypot(to[0] - was[0], to[-1] - was[-1]) / motion.GAITS[style].speed)
+
+    def push(self, time: float, to: Sequence[float], thing: str = "block", seconds: Optional[float] = None) -> "Actor":
+        """At `time` it pushes a load (a "block": it stands in front of it from the start of the film) to (x, z),
+        leaning into it. The load goes with the figure from then on; hold(t, None) takes it away."""
+        self._load(time, thing)
+        seconds = seconds or self._trip_time(to, "push")
+        return self.do(time - 0.4, "brace", seconds=seconds + 0.9).go(time, to, style="push", seconds=seconds)
+
+    def pull(self, time: float, to: Sequence[float], thing: str = "block", seconds: Optional[float] = None) -> "Actor":
+        """At `time` it hauls the load in front of it to (x, z), backwards: send it to a place behind it."""
+        self._load(time, thing)
+        seconds = seconds or self._trip_time(to, "pull")
+        return self.do(time - 0.4, "brace", seconds=seconds + 0.9).go(time, to, style="pull", seconds=seconds)
+
+    def carry(self, time: float, to: Sequence[float], thing: str = "crate", seconds: Optional[float] = None,
+              style: str = "carry") -> "Actor":
+        """At `time` it picks up the load in front of it (a "crate": there from the start of the film), carries
+        it in both arms to (x, z) and puts it down."""
+        self._load(time, thing)
+        seconds = seconds or self._trip_time(to, style)
+        self.do(time, "lift", seconds=seconds + 1.5)
+        return self.go(time + 0.7, to, style=style, seconds=seconds)
 
     def power_down(self, time: float, seconds: float = 1.2) -> "Actor":
         """A robot switches off at `time`: its eyes shut, its face leaves the screen, its head and shoulders sink.
@@ -455,6 +512,60 @@ class Film:
         b.hold(time + 0.95, thing, self._reach(b, meet)["side"])
         return self
 
+    def handshake(self, time: float, a: Actor, b: Actor, seed: Optional[int] = None) -> "Film":
+        """At `time` the two shake hands, at a point between them below their shoulders."""
+        sa, sb = self._shoulder(a), self._shoulder(b)
+        meet = ((sa[0] + sb[0]) / 2, (sa[1] + sb[1]) / 2 - 0.07, (sa[2] + sb[2]) / 2 + 0.1)
+        return self._both(time, a, b, ("handshake", "handshake"), (meet, meet), seed)
+
+    def throw(self, time: float, a: Actor, b: Actor, thing: str = "ball", seed: Optional[int] = None) -> "Film":
+        """At `time` `a` throws a thing to `b`, who catches it: `a` holds it from the start of the film (or from
+        its own hold()), winds up and throws; it flies across in an arc and lands in `b`'s hand, which has it
+        from then on."""
+        if thing not in THINGS or thing in LOADS:
+            raise FilmError(f"{thing!r} is not a thing to throw; there are {', '.join(t for t in THINGS if t not in LOADS)}")
+        sa, sb = self._shoulder(a), self._shoulder(b)
+        far = math.hypot(sb[0] - sa[0], sb[2] - sa[2]) or 1.0
+        way = ((sb[0] - sa[0]) / far, (sb[2] - sa[2]) / far)
+        release = (sa[0] + 0.2 * way[0], sa[1] + 0.13, sa[2] + 0.2 * way[1] + 0.06)
+        catch = (sb[0] - 0.14 * way[0], sb[1] + 0.05, sb[2] - 0.14 * way[1] + 0.08)
+        side = self._reach(a, release)["side"]
+        if not any(value and value.endswith(":" + thing) for _t, value in a.holds):
+            a.hold(0.0, thing, side)
+        else:
+            side = (a.holding(time) or (side, thing))[0]
+        long = motion.ACTIONS["throw"].seconds
+        land = tuple(a.fig.transform.undo(motion.Vec3(catch[0], catch[1] + 0.05, catch[2])))
+        a.do(time, "throw", seed=seed, fly=land, **self._reach(a, release, side))
+        reach_b = self._reach(b, catch)
+        b.do(time + long * motion.LAND - motion.ACTIONS["catch"].seconds * 0.47, "catch",
+             seed=None if seed is None else seed + 1, **reach_b)
+        a.hold(time + long * motion.LAND, None)
+        b.hold(time + long * motion.LAND, thing, reach_b["side"])
+        return self
+
+    def carry_together(self, time: float, a: Actor, b: Actor, to: Sequence[float], thing: str = "long-crate",
+                       seconds: Optional[float] = None) -> "Film":
+        """At `time` the two carry a load between them: they turn to face each other, pick it up, `a` goes to
+        (x, z) and `b` keeps its place across the load, whoever is in front walking backwards; then they put it
+        down. Stand them 0.8 to 0.95 m apart first, the load's length. It is `a`'s load: it stays in front of `a`."""
+        here = [x.trips[-1][1] if x.trips else (tuple(motion.Vec3.of(x.fig.at))[0], tuple(motion.Vec3.of(x.fig.at))[2])
+                for x in (a, b)]
+        gap = (here[1][0] - here[0][0], here[1][-1] - here[0][-1])
+        apart = math.hypot(*gap)
+        if not 0.8 <= apart <= 0.95:
+            raise FilmError(f"to carry a load together they stand 0.8 to 0.95 m apart; they are {apart:.2f} m apart")
+        a._load(time, thing)
+        move = (to[0] - here[0][0], to[-1] - here[0][-1])
+        seconds = seconds or max(0.5, math.hypot(*move) / motion.GAITS["carry"].speed)
+        a_leads = move[0] * gap[0] + move[1] * gap[1] < 0       # `a` is in front of the way they go: it backs
+        a.turn(time - 0.9, (here[1][0], here[1][-1]), seconds=0.6)
+        b.turn(time - 0.9, (here[0][0], here[0][-1]), seconds=0.6)
+        for actor, backs, goal in ((a, a_leads, (to[0], to[-1])), (b, not a_leads, (to[0] + gap[0], to[-1] + gap[1]))):
+            actor.do(time, "lift", seconds=seconds + 1.5)
+            actor.go(time + 0.7, goal, style="carry-back" if backs else "carry", seconds=seconds, turn=0.0)
+        return self
+
     def toast(self, time: float, *actors: Actor, thing: str = "glass", seed: Optional[int] = None) -> "Film":
         """At `time` the actors (two or more) raise what they drink and touch glasses at a point between them.
         Whoever holds no drink then has `thing` (a "glass" of wine or a "mug" of beer) from the start of the film."""
@@ -467,7 +578,7 @@ class Film:
         for k, actor in enumerate(actors):
             held = actor.holding(time)
             if held is None or held[1] not in DRINKS:
-                actor.hold(0.0, thing, self._reach(actor, meet)["side"])
+                actor.hold(actor._from(time), thing, self._reach(actor, meet)["side"])
                 held = actor.holding(time)
             actor.do(time, "toast", seed=None if seed is None else seed + k, **self._reach(actor, meet, held[0]))
         self.pairs.extend(zip(actors, actors[1:]))

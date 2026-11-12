@@ -191,7 +191,7 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
     beats = sorted(((float(t), _pose(fig, p)) for t, p in beats), key=lambda b: b[0])
     if beats and beats[0][0] <= 0:
         raise ValueError("beats come after the start: [(time > 0, pose), ...]")
-    acts, icons = [], []
+    acts, icons, flights = [], [], {}
     for item in sorted(actions, key=lambda a: a[0]):
         t, name, options = (*item, {})[:3]
         action = _action(fig, name)
@@ -214,6 +214,8 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
             size *= k
         if action.icon:
             icons.append((float(t), action.seconds, str(options.get("icon", "heart"))))
+        if action.fly:             # where what it holds flies to: metres to its side, up and ahead of the figure
+            flights[float(t)] = tuple(float(v) for v in options.get("fly", (0.0, 0.3, 0.8)))
         acts.append((float(t), action, options.get("side", "right"), size))
     # travel [(time, (x, z) in the location[, {"style": "waddle" | "hops", "seconds": s, "turn": 0..1}])]: the figure
     # goes there, rocking from foot to foot or in small hops, its body turned part of the way toward where it goes
@@ -257,6 +259,7 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
         level_was = to_level
     flickers = any(action.flicker for _t, action, _s, _k in acts)
     handled = any(action.tip or action.pop for _t, action, _s, _k in acts)
+    lifts = any(action.lift for _t, action, _s, _k in acts)
 
     def powered(t: float) -> float:
         out = 1.0
@@ -595,6 +598,7 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
                 add("head.tilt_left_right", -3.0 * e * math.sin(beat))
             step = [start[0] + dx * go + aside[0], start[1] + dz * go + aside[1]]
         tipped, popped = 0.0, 0.0                             # what it holds: tipped to the face, a bottle's pop
+        flown, flying, lifted = 0.0, (0.0, 0.0, 0.0), 0.0     # ... thrown, and where to; a load, how far up
         level = powered(t)
         if level < 1.0:                                       # a robot that is off hangs its head and shoulders
             down = 1.0 - level
@@ -629,6 +633,10 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
                 tipped += scale * action.tip(u, t - at)
             if action.pop:
                 popped = max(popped, action.pop(u))
+            if action.fly and action.fly(u) > 0.0:
+                flown, flying = action.fly(u), flights.get(at, (0.0, 0.3, 0.8))
+            if action.lift:
+                lifted = max(lifted, action.lift(u))
             if action.squash:
                 squash += scale * action.squash(u, t - at)
             if action.air and not sitting(t):
@@ -744,6 +752,7 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
             if life:
                 squash += 0.012 * life * math.sin(2 * math.pi * t / 3.6 + phase[0])   # it breathes
             keyed.update(squash=max(-0.22, min(0.22, squash)), arm_left=arms["left"], arm_right=arms["right"])
+        in_air = hop_h                                        # off the ground by its own doing: a hop, a jump
         if abs(rock) > 1.0 and hasattr(fig, "lying_lift"):    # leaning over, it rests on the ground: not in it
             hop_h += fig.lying_lift(rock)
         if hasattr(fig, "hop"):
@@ -760,13 +769,17 @@ def perform(loc, fig, beats: Sequence[tuple[float, Union[str, Pose]]] = (), fps:
             keyed.update(power=max(0.0, min(1.0, level)))
         if hasattr(fig, "item_tilt") and handled:
             keyed.update(item_tilt=max(-40.0, min(80.0, tipped)), pop=popped)
+        if hasattr(fig, "item_fly") and flights:
+            keyed.update(item_fly=flown, item_to_x=flying[0], item_to_y=flying[1], item_to_z=flying[2])
+        if hasattr(fig, "item_lift") and lifts:
+            keyed.update(item_lift=lifted)
         if hasattr(fig, "look_x"):
             # the eyes dart ahead of the head: they take what the head has still to turn, and give it back as it comes
             final = head_goal(t + 0.12)
             dart = next((d for at, d in reversed(darts) if t >= at), (0.0, 0.0))   # and are never quite still
             keyed.update(look_x=max(-1.0, min(1.0, 0.9 * (final[0] - turn) / 22.0 + dart[0])),
                          look_y=max(-1.0, min(1.0, -0.9 * (final[1] - nod) / 16.0 + dart[1])))
-        air_was[0] = hop_h
+        air_was[0] = in_air                                   # (not the lift of lying down: ears and tail read this)
         loc.move(fig, t, ease="linear", **keyed)
 
     if hasattr(fig, "item"):                                  # holds [(time, "side:thing" | None)]: from when
