@@ -8,21 +8,38 @@ written once and shared:
 
 - the BODY (`_body`): legs and shoes, hips, waist, chest, sleeves, bare arms, hands with four fingers and a thumb,
   neck, head, jaw, ears, hair, eyes, brows, nose, mouth. Its measures are shares of the height read off the sheet
-  (`BUILD` and the tables below), so a taller or shorter person is another `Build`, not another model.
+  (`BUILD` and the tables below), so a taller or shorter person is another `Build`, not another model. A build
+  (`BODIES`: `man` and `woman`, heroic toys with a large head; `tall`, an adult) also says how large its head is
+  and how far up it carries it (`Body.head`, `head_up`, `up`): the head and all it carries, a hat too, are sized
+  with it, and the trunk and the hips are drawn on the man's heights, so an outfit fits every build as it is.
 - an OUTFIT (`OUTFITS`): what a profession wears and carries over that body. `officer` is the pilot: peaked cap,
   collar, placket, pockets, epaulettes, badge, belt with buckle, pouches and a radio. `cook` is the second: a
   toque, a double-breasted jacket with long sleeves, a neckerchief, a waist apron. `firefighter` is the third: a
   helmet, a turnout coat with reflective bands round the chest, forearms and shins. `suit` is the fourth, and has
-  no hat: a jacket (`_jacket`: a skirt over the hips that is open in front, the cloth straight from chest to hem,
-  notched lapels that cross at a button, a collar round the back of the neck, flap pockets, a seam down the
-  back, sleeve buttons) over a shirt (`_open_collar` closed, `_shirt_bib`, `_shirt_cuffs`) and a tie (`_tie`),
-  trousers with turn-ups (`_turn_ups`). Each of those is a part of its own: a lawyer, a presenter, a groom are
-  the same parts in other colours, or some of them (a tie on a shirt with no jacket, a jacket over other trousers).
+  no hat: a jacket (`_jacket`: its body is a `_coat`, one shell with six rings and large facets that lies on the
+  trunk, which is drawn slimmer under it, and hangs off the hips to a hem over where the legs part; taken in at
+  the waist, its shoulders out to the arms, open in front below its one round button, carried by the chest and
+  the hips between them; notched lapels that cross at the button, a low collar round the back of the neck, flat
+  flap pockets, a seam down the back, sleeve buttons) over a shirt (`_open_collar` closed: two wings that frame
+  the knot; `_shirt_bib`, `_shirt_cuffs`) and a tie (`_tie`), trousers that have turn-ups if the person does
+  (`Person.turn_ups`, `_turn_ups`). Each of those is a part of its own: a lawyer, a presenter, a groom are the
+  same parts in other colours, or some of them (a tie on a shirt with no jacket, a jacket over other trousers).
+- a FACE (`FACES`, picked with `Person.face`): the head's planes and what is drawn on them, as one table (`Face`):
+  the skull's sections, the eyes (place, opening, outline, iris, a lid that rests part way down), the brows (a bar
+  of hair, or an outline of their own), the nose (a wedge, or one with wings and nostrils), the mouth (a painted
+  line, or modelled `Lips`), the ears. With none a person has the kit's first face on its build's own skull;
+  "lean" is the anchor's. A face is in the head's own measures, so it goes on any build and is sized with its
+  head, and every face speaks the whole vocabulary of eyes, brows and mouths. What a face draws that no stack of
+  sections makes is a `_shell` (corner by corner) or a `_ribbon` (a strip that follows the face's planes).
+- HAIR for a bare head (`HAIR_TOPS`, picked with `Person.hair_style`): a top over the build's own hair ("brushed"),
+  or a whole head of hair (`Hair`: "swept": sides with sideburns, a top with a hairline that runs down the back
+  of the head in a V), in one colour or two (`Person.temples`).
 - a `Person`: a name, an outfit, colours and a few options of its own: its hair when it wears no hat
   (`hair_style`, HAIR_TOPS, with `temples` for sides of another colour), how heavy its brows are (`brow`), how low
   its shoes (`shoe`) and the colour of their soles. Another profession is another `Person` and, if its clothes
-  differ, another outfit function; nothing of the body is written again. `anchor` is the man's build in the suit,
-  bare-headed, his hair brushed up and grey at the temples.
+  differ, another outfit function; nothing of the body is written again. `anchor` is the tall build in the suit,
+  bare-headed, with the "lean" face and "swept" hair, grey at the temples. `enlist(person)` puts a Person in the cast, the kit's
+  own and one made at run time alike.
 
 Shapes are `Loft`s: sections stacked along a height or along a bone, each an octagon unless it says otherwise
 (`profile=`), whose corners the finish keeps exactly and whose sides it can break into irregular facets
@@ -82,7 +99,7 @@ COLOURS = {
     "lp.shoe-brown": "#6A3B25", "lp.sole-brown": "#3A2217", "lp.skin-tan": "#CC7A44", "lp.skin-tan-shade": "#A25B30",
     "lp.hair-dark": "#352A2B", "lp.hair-grey": "#7A6E6B", "lp.eye-dark": "#33190E",
     # skin in deep shade, any skin's: the line between two lips, a fold (Lips.ink)
-    "lp.crease": "#5C2E1D", "lp.eye-deep": "#2B1409",       # (and an eye that is nearly all iris, darker still)
+    "lp.crease": "#5C2E1D", "lp.eye-deep": "#47210E",       # (and a warm dark iris, for an eye that is nearly all iris)
 }
 m.COLOURS.update(COLOURS)
 
@@ -449,17 +466,23 @@ HAIR_TOPS = {
     # "swept": full hair swept up and back from a clear hairline. The sides stand well out of the head, widest
     # at the top of the temples, and narrow down to the ears; in front of an ear they end in a sideburn, behind
     # it they run down to the nape. The top stands forward of the hairline, is highest over the front third,
-    # overhangs the sides a little and comes down the back of the head in a V
+    # overhangs the sides a little and comes down the back of the head in a V. It is as tall as "brushed" (its
+    # top at 0.976), so a head is the same height with either
     "swept": Hair(
-        sides=Loft([(0.808, 0.04, 0.015, -0.037, hair_planes(0.8)), (0.835, 0.06, 0.025, -0.045, hair_planes(0.8)),
-                    (0.858, 0.068, 0.0335, -0.0455, hair_planes(0.8)), (0.866, 0.07, 0.0525, -0.0285, hair_planes(0.9, 0.94)),
-                    (0.897, 0.078, 0.06, -0.029, hair_planes(0.93, 0.85)), (0.929, 0.0845, 0.061, -0.031, hair_planes(0.475, 0.675)),
-                    (0.938, 0.08, 0.058, -0.031, hair_planes(0.475, 0.675))], stagger=0.004),
-        top=Loft([(0.929, 0.0865, 0.0825, -0.0115, crown_planes(0.14, 0.62, 1.0, 0.45, 0.62, 0.96)),
-                  (0.958, 0.0875, 0.087, -0.007, crown_planes(0.2, 0.62, 0.95, 0.5, 0.6, 0.95)),
-                  (0.977, 0.071, 0.071, -0.003, crown_planes(0.25, 0.6, 0.93, 0.5, 0.6, 0.93)),
-                  (0.988, 0.04, 0.042, 0.0, crown_planes(0.25, 0.6, 0.93, 0.5, 0.6, 0.93))], stagger=0.004),
-        hem=(0.0, 0.014, 0.016, 0.014, 0.0, -0.004, -0.027, -0.058, -0.027, -0.004)),
+        # (its back, off the sheet's profile: 0.088 behind the head's middle at the top of the sides, and in from
+        # there to 0.047 at the nape)
+        sides=Loft([(0.806, 0.0384, 0.0125, -0.0345, hair_planes(0.8)), (0.8314, 0.0576, 0.02, -0.04, hair_planes(0.8)),
+                    (0.8511, 0.0653, 0.0285, -0.0405, hair_planes(0.8)), (0.8624, 0.0672, 0.048, -0.024, hair_planes(0.9, 0.94)),
+                    (0.8897, 0.0749, 0.0535, -0.0225, hair_planes(0.93, 0.85)), (0.9198, 0.0802, 0.053, -0.023, hair_planes(0.47, 0.675)),
+                    (0.9282, 0.073, 0.049, -0.023, hair_planes(0.47, 0.675))], stagger=0.003),
+        # (behind, the sides stay inside the line from the point of the top's V up to the top's own back, so that the
+        # top is proud of them all the way down the V)
+        top=Loft([(0.9198, 0.0821, 0.078, -0.007, crown_planes(0.14, 0.62, 1.0, 0.45, 0.62, 0.96)),
+                  (0.9395, 0.0739, 0.0845, -0.0005, crown_planes(0.2, 0.62, 0.96, 0.5, 0.62, 0.95)),
+                  (0.9545, 0.0614, 0.0697, 0.0133, crown_planes(0.25, 0.6, 0.93, 0.5, 0.6, 0.93)),
+                  (0.9686, 0.0442, 0.0538, 0.0162, crown_planes(0.25, 0.6, 0.93, 0.5, 0.6, 0.93)),
+                  (0.9762, 0.0269, 0.0319, 0.0131, crown_planes(0.25, 0.6, 0.93, 0.5, 0.6, 0.93))], stagger=0.004),
+        hem=(0.0, 0.016, 0.016, 0.016, 0.0, -0.004, -0.025, -0.055, -0.025, -0.004)),
 }
 # a peaked cap, drawn upright and worn tilted back (_peaked_cap): a band round the head over the brow; a crown that
 # starts inside the band, flares out over it to a rim (widest at the sides and the back) and closes in a flat top
@@ -542,13 +565,14 @@ class Lips:
     """A mouth that is modelled instead of painted (Face.lips): a dark line between an upper lip, a plane in the
     skin's shade, and a fuller lower lip that stands out of the face, in the skin's own colour, so the light
     models it. It speaks the same vocabulary as the painted line (expression.MOUTHS) and opens with the voice."""
-    upper: float = 0.0036           # how tall the upper lip is at its fullest, metres
+    upper: float = 0.0038           # how tall the upper lip is at its fullest, metres
     lower: float = 0.0056           # and the lower lip
-    proud: float = 0.0026           # how far the lower lip's ridge stands out of the face
-    line: float = 0.00085           # half the thickness of the line between them, in its middle
-    bend: float = 0.4               # how far the line bends for a smile, a frown: a share of the painted mouth's
-    skew: float = 0.03              # a lopsided smile: the corner on the picture's left is raised this much more
-    ink: str = "lp.crease"          # the line, and a fold in a cheek's corner: skin in deep shade
+    proud: float = 0.0028           # how far the lower lip's ridge stands out of the face
+    line: float = 0.001             # half the thickness of the line between them, in its middle
+    bend: float = 0.6               # how far the line bends (smug, a frown, wavy): a share of the painted mouth's
+    smile: float = 0.28             # and for a smile, which is what the mouth rests in: a slight one
+    skew: float = 0.025             # a lopsided smile: the corner on the picture's left is raised this much more
+    ink: str = "lp.crease"          # the line between the lips: skin in deep shade
     folds: tuple = (("smile", (0.45, 1.0)), ("smug", (0.0, 1.0)))     # as FOLDS: the picture's right, its left
 
 
@@ -595,34 +619,40 @@ class Face:
 
 FACE = Face()          # what a person with no face of its own has
 # an eye's outline that comes to a point at both corners (as ALMOND: bottom to top), for an eye under a heavy lid
-LENS = ((-1.0, 0.3), (-0.5, 0.86), (0.05, 1.0), (0.6, 0.84), (1.0, 0.36))
+LENS = ((-1.0, 0.22), (-0.6, 0.74), (-0.05, 1.0), (0.5, 0.82), (1.0, 0.3))
 # a heavy brow, set low: rows from its inner end, by the nose, to its outer end: (share of its length, its lower
 # edge, its upper edge), the edges in shares of the head's half height from the line through its two ends. It is
-# thickest by the nose, its top rises to an arch two thirds of the way out and it ends thin
-BROW_HEAVY = ((0.0, -0.05, 0.055), (0.13, -0.065, 0.085), (0.64, -0.035, 0.1), (1.0, -0.02, 0.02))
-# the "lean" face: longer from the eyes to the chin than the first, and narrower: a jaw that runs down from the
-# cheekbones to a corner level with the lower lip and from there in to a chin with a flat front; the eyes higher
-# on the head, level with the tops of the ears, small, dark and under a heavy lid; thick brows low over them,
-# heaviest by the nose; a nose with a flat ridge, side planes and wings; modelled lips in a lopsided smile; a
-# higher forehead. Sections as the skull's are, here as the head is drawn (no _bigger): y, half width, half
-# depth, forward, planes
-LEAN_SKULL = Loft([(0.775, 0.024, 0.022, 0.066, face_planes(0.6, 0.9, 0.8, 0.3)),
-                   (0.789, 0.037, 0.035, 0.059, face_planes(0.55, 0.88, 0.82, 0.2)),
-                   (0.805, 0.0565, 0.052, 0.041, face_planes(0.42, 0.72, 0.8, -0.25)),
-                   (0.822, 0.06, 0.064, 0.028, face_planes(0.42, 0.75, 0.8, 0.0)),
-                   (0.85, 0.0635, 0.0714, 0.0165, face_planes(0.4, 0.84, 0.78, 0.2)),
-                   (0.8635, 0.0645, 0.0714, 0.0112, _EYES), (0.887, 0.0645, 0.0714, 0.0112, _EYES),
-                   (0.891, 0.0645, 0.0765, 0.0118, face_planes(0.5, 0.84, 0.82, 0.25)),
-                   (0.905, 0.0645, 0.078, 0.0122, face_planes(0.5, 0.84, 0.82, 0.25)),
-                   (0.928, 0.06, 0.0734, 0.0061, face_planes(0.45, 0.82, 0.78, 0.25)),
-                   (0.953, 0.05, 0.059, 0.0, face_planes(0.4, 0.8, 0.75, 0.3))])
+# thickest by the nose (12 mm), its top rises a little to an arch two thirds of the way out, and from there it
+# comes down to a point
+BROW_HEAVY = ((0.0, -0.085, 0.061), (0.15, -0.08, 0.08), (0.69, -0.015, 0.098), (1.0, -0.07, -0.052))
+# the "lean" face, read off the anchor's sheet: longer from the eyes to the chin than the first and narrower (its
+# width 0.59 of the head's height with the hair, the first's 0.66); a jaw that runs straight down from the
+# cheekbones to a corner under the mouth and from there in to a chin with a flat front; the eyes 8 mm higher on
+# the head, level with the tops of the ears, dark, nearly all iris; a band for them that ends in a sharp rim under
+# the brow, where thick brows lie low over them, heaviest by the nose; a nose with a narrow flat ridge, side
+# planes, and wings and nostrils at its base; modelled lips in a lopsided smile; a higher forehead that leans
+# back; larger ears set further back. The head is as tall as the first's, from the same chin (0.775) to the same
+# top of the hair (0.976, with HAIR_TOPS["swept"] as with "brushed"), so a build's head size (Body.head) means
+# the same with either face. Sections as the skull's are, here as the head is drawn (no _bigger): y, half
+# width, half depth, forward, planes
+LEAN_SKULL = Loft([(0.775, 0.0226, 0.0182, 0.0595, face_planes(0.6, 0.9, 0.8, 0.3)),
+                   (0.7863, 0.0357, 0.0304, 0.053, face_planes(0.55, 0.88, 0.82, 0.2)),
+                   (0.7976, 0.0493, 0.045, 0.0384, face_planes(0.42, 0.72, 0.78, -0.25)),
+                   (0.8192, 0.0555, 0.0592, 0.0253, face_planes(0.42, 0.75, 0.76, 0.0)),
+                   (0.8455, 0.0597, 0.0671, 0.0155, face_planes(0.4, 0.84, 0.78, 0.2)),
+                   (0.8582, 0.0606, 0.0671, 0.0105, _EYES), (0.8798, 0.0606, 0.0671, 0.0105, _EYES),
+                   (0.8822, 0.0606, 0.0719, 0.0111, face_planes(0.5, 0.84, 0.82, 0.25)),
+                   (0.8972, 0.0606, 0.0733, 0.0115, face_planes(0.5, 0.84, 0.82, 0.25)),
+                   (0.9188, 0.0564, 0.07, 0.007, face_planes(0.45, 0.82, 0.78, 0.25)),
+                   (0.9423, 0.047, 0.0602, 0.0038, face_planes(0.4, 0.8, 0.75, 0.3))])
 FACES = {
-    "lean": Face(skull=LEAN_SKULL, eye_x=0.395, eye_y=0.178, eye=(0.0145, 0.008), eye_shape=LENS, iris=0.0082,
-                 pupil=0.0042, glint=0.0019, lid=0.2, slant=4.0, wide=1.25,
-                 brow_at=(0.41, 0.41, 0.31), brows=BROW_HEAVY, brow_down=0.4,
-                 nose=((0.018, 0.0065, 0.003, 0.7, -1.0), (-0.002, 0.007, 0.008, 0.6, -1.0), (-0.022, 0.011, 0.018, 0.5, -0.6),
-                       (-0.033, 0.0175, 0.0245, 0.42, 0.0), (-0.039, 0.0165, 0.018, 0.5, 0.1), (-0.043, 0.011, 0.004, 0.6, -1.0)),
-                 nostril=0.0042, mouth_x=0.42, mouth_y=-0.49, lips=Lips(), ear_back=0.022, ear_drop=0.009, ear=1.12),
+    "lean": Face(skull=LEAN_SKULL, eye_x=0.371, eye_y=0.103, eye=(0.0136, 0.0077), eye_shape=LENS, iris=0.0086,
+                 pupil=0.0045, glint=0.0019, lid=0.05, slant=5.0, wide=1.2, lash=(0.3, 0.3),
+                 brow_at=(0.367, 0.301, 0.301), brows=BROW_HEAVY, brow_down=0.4,
+                 nose=((0.0188, 0.0056, 0.0028, 0.7, -1.0), (0.0, 0.0061, 0.0066, 0.65, -1.0), (-0.0188, 0.0089, 0.015, 0.55, -0.7),
+                       (-0.031, 0.0155, 0.023, 0.5, -0.1), (-0.0367, 0.0164, 0.0211, 0.5, 0.05), (-0.0404, 0.0122, 0.0113, 0.6, -1.0)),
+                 nostril=0.0028, mouth_x=0.395, mouth_y=-0.506, lips=Lips(),
+                 ear_back=0.0207, ear_drop=0.0105, ear=1.11, ear_turn=36.0, ear_out=0.004),
 }
 
 
@@ -718,11 +748,13 @@ BODIES = {
     # is on the figure as it stands.
     "tall": Body(
         Build(height=1.0, head=1.25, torso=0.99, legs=0.945, arms=0.838, shoulders=0.75, hips=1.08),
-        # (a jacket's shoulders: square, 0.27 across over the sleeves' heads; a chest 0.21 wide, a flat back)
-        Loft([(0.512, 0.086, 0.068, 0.013), (0.573, 0.084, 0.070, 0.014), (0.613, 0.094, 0.070, 0.008),
-              (0.645, 0.107, 0.071, 0.005), (0.685, 0.113, 0.073, 0.001), (0.715, 0.124, 0.069, -0.004),
-              (0.733, 0.140, 0.062, -0.008), (0.745, 0.137, 0.057, -0.011), (0.753, 0.120, 0.053, -0.011),
-              (0.763, 0.093, 0.048, -0.009), (0.773, 0.066, 0.043, -0.007), (0.783, 0.050, 0.038, -0.005),
+        # (square shoulders, 0.28 across over the sleeves' heads, which stand 0.025 out of the trunk's own
+        # shoulders as the man's do: a coat that an outfit lays on the trunk stays inside them; a chest 0.21 wide,
+        # a flat back. No more sections than the man's between the waist and the collar: a lapel has a row at
+        # each, and the paper finish's engine takes no surface whose formula is longer than 2048 characters)
+        Loft([(0.512, 0.086, 0.068, 0.013), (0.556, 0.084, 0.070, 0.014), (0.613, 0.094, 0.070, 0.008),
+              (0.645, 0.107, 0.071, 0.005), (0.685, 0.113, 0.073, 0.001), (0.733, 0.118, 0.062, -0.008),
+              (0.745, 0.118, 0.057, -0.011), (0.753, 0.110, 0.053, -0.011), (0.783, 0.050, 0.038, -0.005),
               (0.795, 0.037, 0.033, -0.003)], flat=0.72, crease=SEAT_CREASE),
         Loft([(0.401, 0.03, 0.034, 0.0), (0.425, 0.086, 0.056, 0.0), (0.455, 0.099, 0.069, 0.0),
               (0.49, 0.099, 0.070, 0.001), (0.535, 0.088, 0.069, 0.006)], flat=0.72, crease=SEAT_CREASE),
@@ -733,14 +765,16 @@ BODIES = {
               (0.93, 0.035, 0.0415, 0.004)),
         # (a sleeve 0.067 across from under its head, which is fuller, to a cuff 0.064 across: times `arm`)
         arm=0.72,
-        sleeve_upper=((-0.16, 0.04, 0.036, 0.0), (0.0, 0.058, 0.052, 0.0), (0.45, 0.05, 0.052, 0.0), (1.04, 0.046, 0.047, 0.0)),
+        sleeve_upper=((-0.16, 0.044, 0.038, 0.0), (0.0, 0.062, 0.054, 0.0), (0.45, 0.05, 0.052, 0.0), (1.04, 0.046, 0.047, 0.0)),
         sleeve_fore=((-0.04, 0.046, 0.047, 0.0), (0.28, 0.046, 0.047, 0.0), (0.9, 0.043, 0.042, 0.0), (0.96, 0.045, 0.044, 0.0),
                      (1.02, 0.045, 0.044, 0.0)),
         # the arms hang close: the wrists come to 0.149 out, 0.496 up and 0.007 behind the hips, the elbows 0.04
-        # behind them, inside the back's outline in profile; the fingertips at 0.39, on the middle of the thigh
-        rest_hands=(0.216, 0.541, 0.0), hand=0.88, foot=0.84,
+        # behind them, inside the back's outline in profile; the fingertips at 0.375, on the middle of the thigh.
+        # Seated, it comes down by what puts its hips and thighs where the man's are on a seat (0.107 and 0.08 up)
+        rest_hands=(0.216, 0.541, 0.0), hand=0.84, foot=0.84, sit_drop=0.17,
         # the head: 0.79 of the man's (0.13 wide at the ears, chin 0.85 of the height, the top of the hair 1.0)
         up=0.049, head=0.79, head_up=0.0724, neck=(0.039, 0.038),
+        knee=(0.029, 0.038, 0.04),               # (inside the slimmer leg: the man's shows at its sides)
         # feet under the hips and nearly straight legs, shoulders that slope a little more, a face held upright
         stance={**STANCE, "left_upper_leg.in_out": 2.5, "right_upper_leg.in_out": 2.5, "left_upper_leg.front_back": 3.0,
                 "right_upper_leg.front_back": 3.0, "left_shoulder.down_up": -15.0, "right_shoulder.down_up": -15.0,
@@ -772,6 +806,7 @@ class Person:
     shoe: float = 1.0               # how tall its shoes are, against a boot: lower is a dress shoe (a thinner sole, a lower toe)
     shirt: str = "lp.shirt"         # what shows under a jacket: the shirt's front, its collar, its cuffs
     tie: str = "lp.red"             # a tie, where the outfit has one
+    turn_ups: float = 0.0           # turn-ups on a suit's trousers: how tall, a share of the shin's length (0: none; 0.1 is usual)
     # the hair on top of the head (HAIR_TOPS). None: the head wears a hat, and the build's hair is the back and the
     # sides only, as far up as the hat hides
     hair_style: str | None = None
@@ -790,9 +825,10 @@ PEOPLE = {
     # the same uniform on the other build: nothing of the outfit or the body is written again
     "captain": Person("captain", "Captain", body="woman", skin="lp.skin-brown", shade="lp.skin-brown-shade",
                       hair="lp.hair-black", tilt=-1.0),
-    # a news anchor: the man's build in a suit, bare-headed, his hair brushed up and grey at the temples
-    "anchor": Person("anchor", "Anchor", outfit="suit", skin="lp.skin-tan", shade="lp.skin-tan-shade", hair="lp.hair-dark",
-                     temples="lp.hair-grey", hair_style="brushed", brow=1.08, eyes="lp.eye-dark", top="lp.suit",
+    # a news anchor: the tall build (an adult, as his sheet draws him) in a suit, bare-headed, with the face of his
+    # sheet (FACES["lean"]) and his hair swept up and back, grey at the temples (HAIR_TOPS["swept"])
+    "anchor": Person("anchor", "Anchor", outfit="suit", body="tall", skin="lp.skin-tan", shade="lp.skin-tan-shade", hair="lp.hair-dark",
+                     temples="lp.hair-grey", hair_style="swept", face="lean", brow=1.08, eyes="lp.eye-deep", top="lp.suit",
                      bottom="lp.suit", trim="lp.suit-dark", shirt="lp.shirt", tie="lp.orange", shoes="lp.shoe-brown",
                      sole="lp.sole-brown", shoe=0.75, sleeve=1.0, buttons="lp.suit-dark"),
 }
@@ -1093,7 +1129,9 @@ def _shell(k: Parts, carry, name: str, rings, material: str) -> None:
     """A part drawn corner by corner, for a shape that no stack of level sections makes (a brow or a lip that
     follows the face's planes, hair whose edge dips): `rings` are its rows, each as many points (x, y, z) in the
     carry's rest space, round the part. It closes at each end on the middle of its first and of its last ring,
-    and the finish keeps its corners exactly, as a Loft's. The rings may be given either way round."""
+    and the finish keeps its corners exactly, as a Loft's. The rings may be given either way round. A shell of
+    many rings and corners is drawn as two or more parts of the same name that share a ring, so that none of
+    its formulas is longer than SHELL_LONG (the paper engine takes none over 2,048 characters)."""
     n = len(rings[0])
     mid = lambda ring: tuple(sum(q[a] for q in ring) / n for a in range(3))      # noqa: E731
     rows = [[mid(rings[0])] * n, *([tuple(q) for q in ring] for ring in rings), [mid(rings[-1])] * n]
@@ -1103,26 +1141,37 @@ def _shell(k: Parts, carry, name: str, rings, material: str) -> None:
                for a, b, c in ((lo[i], lo[(i + 1) % n], hi[(i + 1) % n]), (lo[i], hi[(i + 1) % n], hi[i])))
     if held > 0:
         rows = [[row[0], *row[:0:-1]] for row in rows]
-    low, high = ([f(q[a] for row in rows for q in row) for a in range(3)] for f in (min, max))
-    c = tuple((a + b) / 2 for a, b in zip(low, high))
     corner = lambda i: f"(max(1-abs(u-{i}),0)" + (f"+max(1-abs(u-{n}),0))" if i == 0 else ")")      # 1 on corner i  # noqa: E731
 
-    def along(a):        # a corner's place runs straight from ring to ring as v counts them
-        terms = []
-        for i in range(n):
-            text = f"{rows[0][i][a] - c[a]:.5f}"
-            for j in range(1, len(rows)):
-                d = rows[j][i][a] - rows[j - 1][i][a]
-                if abs(d) > 1e-9:
-                    text += f"+({d:.5f})*min(max(v-{j - 1},0),1)"
-            if text != "0.00000":
-                terms.append(f"({text})*{corner(i)}")
-        return "(" + "+".join(terms or ["0"]) + ")"
+    def drawn(rows):
+        low, high = ([f(q[a] for row in rows for q in row) for a in range(3)] for f in (min, max))
+        c = tuple((a + b) / 2 for a, b in zip(low, high))
 
-    k.made.append(Limb(x=along(0), y=along(1), z=along(2), u=(0, n), v=(0, len(rows) - 1), samples=(n, len(rows) - 1),
-                       closed=(True, False), radii=tuple(max(0.001, (b - a) / 2) for a, b in zip(low, high)),
-                       at=carry.point(c), basis=carry.basis(m.IDENTITY), name=name, material=material, role="drawn",
-                       casts_shadow=False, looks=k.fig.looks))
+        def along(a):        # a corner's place runs straight from ring to ring as v counts them
+            terms = []
+            for i in range(n):
+                text = f"{rows[0][i][a] - c[a]:.5f}"
+                for j in range(1, len(rows)):
+                    d = rows[j][i][a] - rows[j - 1][i][a]
+                    if abs(d) >= 5e-6:
+                        text += f"+({d:.5f})*min(max(v-{j - 1},0),1)"
+                if text not in ("0.00000", "-0.00000"):
+                    terms.append(f"({text})*{corner(i)}")
+            return "(" + "+".join(terms or ["0"]) + ")"
+
+        x, y, z = along(0), along(1), along(2)
+        if max(len(x), len(y), len(z)) > SHELL_LONG and len(rows) > 2:
+            cut = len(rows) // 4 * 2 or 1        # (an even row where there is one: the two parts' facets then run as one part's)
+            return drawn(rows[:cut + 1]) + drawn(rows[cut:])
+        return [Limb(x=x, y=y, z=z, u=(0, n), v=(0, len(rows) - 1), samples=(n, len(rows) - 1), closed=(True, False),
+                     radii=tuple(max(0.001, (b - a) / 2) for a, b in zip(low, high)), at=carry.point(c),
+                     basis=carry.basis(m.IDENTITY), name=name, material=material, role="drawn", casts_shadow=False,
+                     looks=k.fig.looks)]
+
+    k.made.extend(drawn(rows))
+
+
+SHELL_LONG = 1800      # the longest formula a _shell writes for one part (the size a build gives its head is written in front of it)
 
 
 def _ribbon(k: Parts, name: str, on, stations, material: str, deep: float = 0.003, rows=()) -> None:
@@ -1172,6 +1221,7 @@ def _eyes(k: Parts, on, limb, face: Face = FACE) -> None:
     smiling = e.mouth in ("smile", "smug", "flat")
     rest = 0.0 if e.eyes == "wide" else face.lid     # where a heavy lid rests
     g = face.iris / IRIS                             # the eye's size, against the first face's
+    size = getattr(k.head, "k", 1.0)                 # the head's size on this build: a painted line is as much thinner
     for sx in (-1, 1):
         fx, fy = sx * face.eye_x, face.eye_y
         shut = min(1.0, fig.lid + (fig.lid_right if sx > 0 else fig.lid_left))
@@ -1184,10 +1234,10 @@ def _eyes(k: Parts, on, limb, face: Face = FACE) -> None:
                                              for s in (1, -1)] for t in (-1.0, -0.5, 0.0, 0.5, 1.0)], p.hair)
                 continue
             fig._stroke("eye/closed", [on(fx + (i - 3) / 3 * 0.2, fy + up * 0.04 * (1 - ((i - 3) / 3) ** 2), 0.012)
-                                       for i in range(7)], 0.003)
+                                       for i in range(7)], 0.003 * size)
             continue
         if e.eyes == "spiral":
-            m.spiral(on, fig._stroke, fx, fy, 0.13, 0.003)
+            m.spiral(on, fig._stroke, fx, fy, 0.13, 0.003 * size)
             continue
         shut = rest + (1.0 - rest) * shut
         turn = rotation(*on.turn(fx, fy), 0)         # an eye lies flat in its socket's plane: it neither floats nor sinks
@@ -1264,7 +1314,7 @@ def _head(k: Parts) -> None:
     def bar(name, points, r, material=None):      # a brow is a bar of his hair, bent once: heavy from the nose, thinner at its
         # outer end, and set into the brow so that it does not stand off it in profile
         ends = [k.head.point((q[0], q[1], q[2] - 0.92 * heavy * r)) for q in (points[0], points[len(points) // 2], points[-1])]
-        thick = [heavy * r * s for s in (0.95, 1.0, 0.55)]
+        thick = [heavy * r * s * getattr(k.head, "k", 1.0) for s in (0.95, 1.0, 0.55)]      # (as thick as the head is large)
         for a, b, r0, r1 in zip(ends, ends[1:], thick, thick[1:]):
             k.rod("hair/brow", a, b, r0, r1, p.hair, samples=(8, 5))
 
@@ -1294,7 +1344,7 @@ def _hair(k: Parts, style: Hair) -> None:
         for i, (x, z) in enumerate(top.ring(s[0])):
             y = s[0] + (style.hem[i] if j == 0 else top.stagger * (-1 if (i + j) % 2 else 1) if j < len(top.s) - 1 else 0.0)
             if j == 0 and style.hem[i] < 0:          # it comes down: onto the sides' hair, a little proud of it
-                (x, y, z), _yaw = sides.around(math.degrees(math.atan2(x, z - sides.at(y)[2])), y, 0.003)
+                (x, y, z), _yaw = sides.around(math.degrees(math.atan2(x, z - sides.at(y)[2])), y, 0.004)
             ring.append((x, y, z))
         rings.append(ring)
     _shell(k, k.head, "hair/top", rings, p.hair)
@@ -1350,7 +1400,8 @@ def _lips(k: Parts, on, face: Face, mouth: str, was: str, mix: float) -> None:
             _ribbon(k, "mouth/teeth", on, [[(half * u, min(top(u) - 0.05 * h, y0 + 0.56 * h), 0.0016), (half * u, y0 + 0.08 * h, 0.0016)]
                                            for u in (-0.74, -0.4, 0.0, 0.4, 0.74)], "lp.tooth")
     else:
-        line = lambda name: (lambda u: lips.bend * MOUTH_LINES[name](u) + (lips.skew * max(0.0, u) ** 2 if name == "smile" else 0.0))  # noqa: E731
+        line = lambda name: ((lambda u: lips.smile * MOUTH_LINES[name](u) + lips.skew * max(0.0, u) ** 2) if name == "smile"      # noqa: E731
+                             else (lambda u: lips.bend * MOUTH_LINES[name](u)))
         curve = line(mouth if mouth in MOUTH_LINES else "flat")
         if fig.mouth_mix < 1.0 and was in MOUTH_LINES and was != mouth:        # becoming this mouth from the line before it
             old, new = line(was), curve
@@ -1374,10 +1425,11 @@ def _lips(k: Parts, on, face: Face, mouth: str, was: str, mix: float) -> None:
         fold = tuple((1 - mix) * a + mix * b for a, b in zip(folds.get(was, (0.0, 0.0)), fold))
     for sx, s in zip((-1, 1), fold):
         if s > 0.2:
-            y, wide = y0 + curve(sx * 1.0), 0.012 * s
-            _ribbon(k, "mouth/fold", on, [[(sx * (half + 0.05 + 0.07 * t - wide * b), y - 0.02 + (0.06 + 0.12 * s) * t, 0.0006),
-                                           (sx * (half + 0.05 + 0.07 * t + wide * b), y - 0.02 + (0.06 + 0.12 * s) * t, 0.0006)]
-                                          for t, b in ((0.0, 0.15), (0.3, 1.0), (1.0, 0.1))], p.shade)
+            # (a short crease that starts just outside the corner and curves up and out of it)
+            y, wide = y0 + curve(sx * 1.0), 0.009 * s
+            _ribbon(k, "mouth/fold", on, [[(sx * (half + 0.03 + 0.045 * t * t - wide * b), y - 0.015 + (0.05 + 0.06 * s) * t, 0.0006),
+                                           (sx * (half + 0.03 + 0.045 * t * t + wide * b), y - 0.015 + (0.05 + 0.06 * s) * t, 0.0006)]
+                                          for t, b in ((0.0, 0.2), (0.4, 1.0), (1.0, 0.15))], p.shade)
 
 
 def _mouth(k: Parts, on, limb, face: Face = FACE) -> None:
@@ -1412,7 +1464,8 @@ def _mouth(k: Parts, on, limb, face: Face = FACE) -> None:
     if fig.mouth_mix < 1.0 and was in shape and was != mouth:       # becoming this mouth from the line before it
         t, old, new = mix, shape[was], curve
         curve = lambda u: (1 - t) * old(u) + t * new(u)             # noqa: E731
-    fig._stroke("mouth/line", [on(face.mouth_x * u, y0 + curve(u), -0.1) for u in (i / 4 - 1 for i in range(9))], 0.0019)
+    size = getattr(k.head, "k", 1.0)         # the head's size on this build: a painted line is as much thinner
+    fig._stroke("mouth/line", [on(face.mouth_x * u, y0 + curve(u), -0.1) for u in (i / 4 - 1 for i in range(9))], 0.0019 * size)
     # the one fold a smile makes in the cheek, from each corner up toward the nose (FOLDS), in the skin's shade:
     # it comes and goes with the mouth, as the line does
     fold = FOLDS.get(mouth, (0.0, 0.0))
@@ -1422,7 +1475,7 @@ def _mouth(k: Parts, on, limb, face: Face = FACE) -> None:
         if s > 0.2:
             y = y0 + curve(sx * 1.0)
             fig._stroke("mouth/fold", [on(sx * (face.mouth_x + 0.035), y + 0.005, -0.1), on(sx * (face.mouth_x + 0.075), y + 0.035 + 0.075 * s, -0.1)],
-                        0.0017, k.p.shade)
+                        0.0017 * size, k.p.shade)
 
 
 def _body(k: Parts) -> None:
@@ -1594,7 +1647,8 @@ def _stand(k: Parts, material: str, low: float = 0.03, high: float = 0.0, tilt: 
 
 
 def _open_collar(k: Parts, tilt: float = 14.0, drop: float = 0.068, under: str | None = None, material: str | None = None,
-                 spread: float = 0.016, high: float = 0.0, wide: float = 0.021, thick: float = 0.005) -> None:
+                 spread: float = 0.016, high: float = 0.0, wide: float = 0.021, thick: float = 0.005, on: Loft | None = None,
+                 top: float = 0.005, rise: float = 0.004, lift: float = 0.003) -> None:
     """A shirt's collar: a band that stands round the neck, highest behind it (`high` over where the trunk ends);
     two wings folded down from the sides of the neck onto the chest, stiff and with thickness (`wide` and `thick`
     are half a wing's width and half its thickness), their points `drop` under the neck; between them the opening
@@ -1602,37 +1656,49 @@ def _open_collar(k: Parts, tilt: float = 14.0, drop: float = 0.068, under: str |
     `spread` is how far a wing's point stands out from where it leaves the neck: worn open the points are apart;
     below 0 they come in toward the middle, as a collar closed over a tie has them (the opening is then the shirt
     itself: `under`). `material` is the shirt's colour when it is not the person's top (a shirt under a jacket,
-    whose lapels lie over the wings: thinner wings stay under them)."""
+    whose lapels lie over the wings: thinner wings stay under them), and `on` what the wings and the opening lie
+    on when that is not the trunk (a jacket's body, `Coat.loft`).
+    A wing's top is `top` wide (half of it) and `rise` over where the trunk ends at the neck, and its middle
+    stands `lift` off what it lies on: one that is wide at its top and starts lower hangs from the band's front,
+    as the wing of a collar closed over a tie does under a chin."""
     p, c, trunk = k.p, k.chest, k.b.trunk
     yn, rxn = trunk.s[-1][:2]
-    cloth = material or p.top
+    cloth, on = material or p.top, on or trunk
     _stand(k, cloth, low=0.034, high=high, tilt=tilt, name="collar/band")
     # the opening: a triangle of the undershirt, its point down
-    at, turn = _laid(trunk, 0.0, yn - drop - 0.004, yn - 0.012, -0.001)
+    at, turn = _laid(on, 0.0, yn - drop - 0.004, yn - 0.012, -0.001)
     _piece(k, c, "collar/under", [(0.0, 0.002, 0.004), (drop - 0.008, rxn - 0.006, 0.004)], under or p.trim, at, turn)
     for sx in (-1, 1):
         # a wing: a kite from the side of the neck down to its point, which stands out from the neck's side
-        at, turn = _laid(trunk, sx * (rxn + 0.004), yn - drop, yn, 0.003)
+        at, turn = _laid(on, sx * (rxn + 0.004), yn - drop, yn + min(0.0, rise), lift)
         roll = math.degrees(math.atan2(spread, drop))
-        _piece(k, c, "collar/wing", [(-0.003, 0.002, thick), (0.52 * drop, wide, thick), (drop + 0.004, 0.005, thick)], cloth,
+        _piece(k, c, "collar/wing", [(-0.003, 0.002, thick), (0.52 * drop, wide, thick), (drop + rise, top, thick)], cloth,
                (at[0] + sx * (spread - 0.008), at[1], at[2]), m._mul(turn, rotation(0, 0, sx * roll)))
 
 
 def _button(k: Parts, carry, name: str, loft: Loft, x: float, y: float, material: str, size: float = 0.0095,
-            lift: float = 0.003) -> None:
-    """A button on a part's front: a small stud set on its corner, so it reads as a diamond."""
+            lift: float = 0.003, shape: str = "stud") -> None:
+    """A button on a part's front. "stud": a small stud set on its corner, so it reads as a diamond (a shirt's, a
+    pocket's). "round": a flat disc with eight sides, `size` its radius, lying on the facet (a jacket's)."""
+    if shape == "round":
+        at, turn = loft.seat(x, y, lift)
+        thick = 0.3 * size
+        _piece(k, carry, name, [(-size, 0.41 * size, thick), (-0.41 * size, size, thick), (0.41 * size, size, thick),
+                                (size, 0.41 * size, thick)], material, at, turn)
+        return
     k.flat(carry, name, loft, x, y, (size, size, 0.7 * size), material, lift=lift, roll=45, soft=0.55, samples=(8, 6))
 
 
 def _flap(k: Parts, carry, loft: Loft, x: float, y: float, half: float, material: str, tall: float = 0.037,
-          point: float = 0.009, name: str = "pocket/flap") -> None:
+          point: float = 0.009, name: str = "pocket/flap", thick: float = 0.008, sink: float = 0.002) -> None:
     """A pocket's flap on a part's front, its top edge at height `y`, `tall` from there down: its lower edge comes
     to a point in the middle over the last `point` of that (0: it is cut straight, as a jacket's is). It is thick
-    enough to stand out of the facets it lies on."""
-    at, turn = loft.seat(x, y - 0.018, -0.002)
+    enough to stand out of the facets it lies on: `thick` is half its thickness and its middle lies `sink` under
+    the part's surface (thinner and less sunk, it is flatter: for cloth that dents less)."""
+    at, turn = loft.seat(x, y - 0.018, -sink)
     low = 0.018 - tall
-    _piece(k, carry, name, [(low, 0.003 if point else half, 0.008), *([(low + point, half, 0.008)] if point else []),
-                            (0.018, half, 0.008)], material, at, turn)
+    _piece(k, carry, name, [(low, 0.003 if point else half, thick), *([(low + point, half, thick)] if point else []),
+                            (0.018, half, thick)], material, at, turn)
 
 
 def _pocket(k: Parts, x: float, y: float, half: float, tall: float = 0.07) -> None:
@@ -1876,116 +1942,366 @@ def _firefighter(k: Parts) -> None:
     _helmet(k)
 
 
-# -- a suit: the same body in a jacket over a shirt and a tie. The trunk and the long sleeves are the jacket (the
-# person's `top`); what makes it one is written below, part by part, each usable without the others
-def _open_front(f: float, slot: float, floor: float):
-    """A skirt's outline: the octagon whose flat share is `f`, open in front: a slot `slot` of the half width each
-    side of the middle, back to `floor` (a share of the half depth). No slot: (f, 0, 1)."""
-    return ((1.0, f), (f, 1.0), (slot, 1.0), (slot, floor), (-slot, floor), (-slot, 1.0), (-f, 1.0), (-1.0, f),
-            (-1.0, -f), (-f, -1.0), (f, -1.0), (1.0, -f))
+# -- a suit: the same body in a jacket over a shirt and a tie. The long sleeves are the jacket's (the person's
+# `top`) and its body is a coat of its own over the trunk and the hips (`_coat`); what makes a suit is written
+# below, part by part, each usable without the others
+def _into(carry, at) -> tuple:
+    """A place of the figure as it is posed, in `carry`'s own space (the rest pose's): what `carry.point` undoes."""
+    q = carry.rest.apply(carry.now.undo(at))
+    p = (q.x, q.y - carry.lift - carry.shift, q.z)
+    return tuple(carry.pivot[i] + (p[i] - carry.pivot[i]) / carry.scale[i] for i in range(3))
 
 
-def _skirt(k: Parts, material: str, top: float = 0.42, out: float = 0.008, flare: float = 0.005, vent: float = 0.2,
-           flat: float = 0.72, crease: float = SEAT_CREASE) -> tuple[Loft, Loft]:
-    """A jacket's body from the chest down, or a coat's: cloth that hangs straight from the chest (`top`, a share
-    of the way from the belt to the neck, where it lies on the trunk) to a hem under where the legs part, which is
-    `out` and `flare` off the hips at their widest (half of `out` in front and behind, where it hangs nearer the
-    legs), whatever waist the build has. It is drawn in two parts that meet in one ring where the trunk begins:
-    over the hips its skirt, carried by them, and over the waist the rest, carried by the chest, which closes
-    inside the trunk above. In front the skirt is open from the hips down, as a jacket's two fronts part below
-    its button: `vent` is half the opening at the hem, a share of the skirt's half width (0: closed); the
-    trousers show in it. Gives the two lofts, the skirt's (on the hips) and the waist's (on the chest), for what
-    lies on them (pocket flaps, a seam)."""
-    trunk, pelvis = k.b.trunk, k.b.pelvis
-
-    def body(y, wider=0.0, deeper=None):          # (half width, front, back) of the body at a height, and that much off it
-        deeper = wider if deeper is None else deeper
-        on = [part.at(y) for part in (pelvis, trunk) if part.s[0][0] <= y <= part.s[-1][0]] or [pelvis.at(y)]
-        return max(a[0] for a in on) + wider, max(a[2] + a[1] for a in on) + deeper, min(a[2] - a[1] for a in on) - deeper
-
-    def between(sizes, y):
-        for (y0, a), (y1, b) in zip(sizes, sizes[1:]):
-            if y <= y1:
-                return tuple(p + (q - p) * (y - y0) / (y1 - y0) for p, q in zip(a, b))
-
-    section = lambda y, size, outline: (y, size[0], (size[1] - size[2]) / 2, (size[1] + size[2]) / 2, outline)   # noqa: E731
-    wide = max(pelvis.s, key=lambda s: s[1])[0]              # the height at which the hips are widest
-    hem, hips, low, chest = pelvis.s[0][0] - 0.004, pelvis.s[-1][0], trunk.s[0][0], _up(k, top)
-    line = [(hem, body(wide, out + flare, 0.5 * out)), (chest, body(chest, 0.001, 0.0005))]
-
-    def hang(y, more=0.0):          # the cloth at a height: on the straight line from the chest to the hem, clear of the body
-        (rx, front, back), near = between(line, y), body(y, 0.002)
-        return max(rx, near[0]) + more, max(front, near[1]) + more, min(back, near[2]) - more
-
-    # the opening: widest at the hem, its edges rounding in to nothing a little over where the hips are widest; a
-    # slot far deeper than the trousers under it, so that it is they that show in it
-    parts = wide + 0.02
-    slots = {hem: vent, hem + 0.03: 0.45 * vent, parts: 0.01 if vent else 0.0}
-    skirt = Loft([*(section(y, hang(y), _open_front(flat, slots.get(y, 0.0), -0.2 if slots.get(y) else 1.0))
-                    for y in sorted({hem, wide, BELT_Y, low, *slots, parts + 0.001})),
-                  section(low + 0.012, body(low + 0.012, -0.004), _open_front(flat, 0.0, 1.0))], crease=crease)
-    k.loft(k.hips, "jacket/skirt", skirt, material)
-    # over the waist: on from the skirt's own top ring (the two meet in one line, with no step); it starts lower,
-    # inside the skirt, so that no gap opens between the two when the trunk leans
-    waist = Loft([section(low - 0.02, hang(low - 0.02, -0.003), flat), section(low, hang(low, 0.0005), flat),
-                  section(hips, hang(hips, 0.0005), flat), section(chest, line[1][1], flat),
-                  section(chest + 0.014, body(chest + 0.014, -0.004), flat)], crease=0.6 * crease)
-    k.loft(k.chest, "jacket/waist", waist, material)
-    return skirt, waist
+_FORMULA = 2000        # the longest formula a part is written with: the paper finish's engine takes none over 2048
+#                        characters (srlocations.templates.MAX_SURFACE_EXPRESSION)
 
 
-def _lapels(k: Parts, material: str, to: float = 0.25, notch: float = 0.74, wide: float = 0.9, proud: float = 0.012,
-            over: int = -1) -> None:
+def _skin(k: Parts, carry, name: str, rings, material: str, crease: float = 0.0, facet: float = FACET, measured=None,
+          ends=None) -> None:
+    """A drawn part through rings of corners that are each given where they are: (x, y, z) in `carry`'s space,
+    round as a Loft's ring goes, as many in every ring. It says what a Loft cannot: a ring that is not level, and
+    a part some of whose rings another bone carries (those rings are given where that bone puts them, brought into
+    `carry` with `_into`: cloth between two bones). It keeps its corners and closes on a point at each end (`ends`;
+    the middle of its end rings if not given). With `crease` its sides break into facets as a Loft's do (`facet`
+    across, millimetres); `measured` are the rings those are measured on: the rest pose's, so that the same facets
+    ride the part however it is posed. A part with many corners is made as several parts of the same name, one
+    above the other, so that none has a formula longer than the paper finish's engine takes (`_FORMULA`).
+    (`_shell` draws a part corner by corner too, for the face and the hair; this one also says how its sides
+    break and where it closes.)"""
+    n = len(rings[0])
+    middle = lambda ring: tuple(sum(p[i] for p in ring) / n for i in range(3))      # noqa: E731
+    ends = ends or (middle(rings[0]), middle(rings[-1]))
+    # its faces look outward, as a Loft's do: rings given the other way round are turned (what the part holds,
+    # counted the way its corners run, comes out below 0 for a Loft)
+    held = sum(a[0] * (b[1] * c[2] - b[2] * c[1]) + a[1] * (b[2] * c[0] - b[0] * c[2]) + a[2] * (b[0] * c[1] - b[1] * c[0])
+               for lo, hi in zip(rings, rings[1:]) for i in range(n)
+               for a, b, c in ((lo[i], lo[(i + 1) % n], hi[(i + 1) % n]), (lo[i], hi[(i + 1) % n], hi[i])))
+    if held > 0:
+        rings, measured = ([[ring[0], *ring[:0:-1]] for ring in each] if each else each for each in (rings, measured))
+    rows = [[tuple(ends[0])] * n, *rings, [tuple(ends[1])] * n]
+    corner = lambda i: f"(max(1-abs(u-{i}),0)" + (f"+max(1-abs(u-{n}),0))" if i == 0 else ")")      # noqa: E731  1 on corner i
+
+    def piece(first, last):     # the rows first..last as one part: its three formulas, where it is, how far it reaches
+        part = rows[first:last + 1]
+        every = [p for row in part for p in row]
+        at = tuple((min(p[i] for p in every) + max(p[i] for p in every)) / 2 for i in range(3))
+
+        def axis(a):            # a coordinate of every corner, running straight from ring to ring as v counts them
+            terms = []
+            for i in range(n):
+                text = f"{part[0][i][a] - at[a]:.5f}"
+                for j in range(1, len(part)):
+                    step = part[j][i][a] - part[j - 1][i][a]
+                    if abs(step) > 5e-6:
+                        text += f"+({step:.5f})*min(max(v-{j - 1},0),1)"
+                terms.append(f"({text})*{corner(i)}")
+            return "+".join(terms)
+
+        return (axis(0), axis(1), axis(2)), at, tuple(max(1e-4, max(abs(p[i] - at[i]) for p in every)) for i in range(3))
+
+    # The paper finish's engine takes no formula longer than _FORMULA. A part that has more to say is written as
+    # several, one above the other, each on from the ring the last one ended on (they bear the same name).
+    pieces, todo = [], [(0, len(rows) - 1)]
+    while todo:
+        first, last = todo.pop(0)
+        made = piece(first, last)
+        if max(len(text) for text in made[0]) > _FORMULA and last - first > 1:
+            todo[:0] = [(first, (first + last) // 2), ((first + last) // 2, last)]
+        else:
+            pieces.append((first, last, *made))
+    if crease:              # as Loft.limb says it: how wide each side is and how long each band (0: a closed end)
+        on = measured or rings
+        bands = [0.0, *(sum(math.dist(a, b) for a, b in zip(lo, hi)) / n for lo, hi in zip(on, on[1:])), 0.0]
+        width = lambda ring, i: math.dist(ring[i], ring[(i + 1) % n])      # noqa: E731
+        sides = [sum((width(a, i) + width(b, i)) / 2 * h for a, b, h in zip(on, on[1:], bands[1:])) / sum(bands) for i in range(n)]
+        # (written as several, none of its sides is cut across: along a ring that two pieces share the only
+        # points are then its corners, which both have, and the pieces meet with no crack)
+        across = facet if len(pieces) == 1 else max(facet, 1000.0 * max(sides) / 1.45)
+    for first, last, (x, y, z), at, reach in pieces:
+        role = "drawn"
+        if crease:
+            role += (f" facet:{across:g}:{crease:g}:" + ",".join(str(round(w * 1000)) for w in sides)
+                     + ":" + ",".join(str(round(h * 1000)) for h in bands[first:last]))
+        k.made.append(Limb(x=x, y=y, z=z, u=(0, n), v=(0, last - first), samples=(n, last - first), closed=(True, False),
+                           radii=reach, at=carry.point(at), basis=carry.basis(m.IDENTITY), name=name, material=material,
+                           role=role, casts_shadow=False, looks=k.fig.looks))
+
+
+def _open_front(f: float, slot: float = 0.0, floor: float = 1.0, fold: float = 0.45):
+    """A coat's outline, fifteen corners: the octagon whose flat share is `f`, with a corner in the middle of its
+    back (the seam: each half of the back is a side of its own) and, in front, on each half a corner at `fold` of
+    the half width (so a front is two sides, which break apart) and the opening between the two fronts: a slot
+    `slot` of the half width each side of the middle, back to `floor` (a share of the half depth). With no slot
+    (0, 1) the four corners of the opening are one, in the middle of the front."""
+    return ((1.0, f), (f, 1.0), (fold, 1.0), (slot, 1.0), (slot, floor), (-slot, floor), (-slot, 1.0), (-fold, 1.0), (-f, 1.0),
+            (-1.0, f), (-1.0, -f), (-f, -1.0), (0.0, -1.0), (f, -1.0), (1.0, -f))
+
+
+_FRONT, _FLOOR, _SEAM = (0, 1, 2, 3, 6, 7, 8, 9), (4, 5), 12       # _open_front's corners: the fronts', the opening's floor, the seam's
+# how far each corner of a coat's rings is moved off its ring's height, as shares of the coat's `stagger`: one up
+# and the next down round the ring, by uneven amounts (and the other way on the next ring), so that no ring reads
+# as a level line; the opening's four corners, which are one where it is closed, move as one. In the middle of
+# the front they move little: a corner moved off a ring where the coat bends takes the cloth off the shape that
+# lapels, a shirt's front and a tie are laid on (`Coat.loft`), and there the lapels hide the ring anyway
+_ZIGZAG = (0.8, -0.6, 0.25, -0.25, -0.25, -0.25, -0.25, 0.25, -0.5, 1.0, -0.7, 0.9, -1.0, 0.6, -0.8)
+
+
+@dataclass(frozen=True)
+class Coat:
+    """A jacket's body as it is worn (`_coat`). `loft` is its shape in the rest pose: what lies on it is placed on
+    that (lapels, a shirt's front, a tie, a button, flaps). `rings` are its corners where the pose puts them, in
+    the chest's space (a seam runs along them). `waist`, `pocket` and `hem` are the heights of three of its rings;
+    `fronts` carry what lies on its skirt in front, on the side x < 0 (-1) and on the other (1): with the hips,
+    and laid forward with the skirt when that thigh is raised."""
+    loft: Loft
+    rings: tuple
+    waist: float
+    pocket: float
+    hem: float
+    fronts: dict
+
+
+class _Raised:
+    """A carry, and what it carries that much higher."""
+
+    def __init__(self, carry, up: float):
+        self.carry, self.up = carry, up
+
+    def point(self, p) -> Vec3:
+        return self.carry.point((p[0], p[1] + self.up, p[2]))
+
+    def basis(self, b):
+        return self.carry.basis(b)
+
+
+def _coat(k: Parts, material: str, out: float = 0.001, hang: float = 0.01, flare: float = 0.014, waist: float = 0.9,
+          shoulder: float = 0.85, vent: float = 0.3, cut: float = 0.03, above: float = 0.03, under: float = 0.009,
+          flat: float = 0.72, crease: float = 7.0, facet: float = 100.0, stagger: float = 0.014, slope: float = 0.012) -> Coat:
+    """A jacket's body, or a coat's: one shell of cloth over the trunk and the hips, from the collar to a hem
+    `above` where the legs part. It is measured on the build. From the waist up it lies on the trunk (`out` off
+    it: a build's trunk is measured with its clothes on), and the trunk under it is drawn `under` slimmer, so no
+    dent of the cloth lets it through. Its skirt hangs straight from the waist to the hem, off the hips: at the
+    hem `hang` in front of them and behind and `flare` to their sides, or more where the hips above the hem need
+    it (it flares over the seat). The waist is taken in (`waist`: 1 lies on the
+    trunk's own waist, 0 hangs straight from the chest to the hem). Its shoulders stand out to the arm
+    (`shoulder`: how much of the sleeve's half width past the shoulder's joint) and come down to it (`slope`: how
+    far the shoulder's point is under the shoulder's line, metres).
+    It has six rings and no more, for each is a line that shows: the hem, the pockets' line, the waist, the chest
+    (where the trunk stands furthest out between the waist and the shoulders), the shoulders, the neck. Their
+    corners are moved off the ring's height, each its own way (`stagger`, metres, along the coat's own edges), and
+    its sides break into few large facets (`facet`, `crease`): no level line runs round it.
+    The chest carries it from the waist up and the hips carry its skirt (the two lowest rings); the cloth between
+    runs from one to the other, so there is no seam between two parts and none opens when the trunk leans.
+    The skirt is open in front below the pockets' line, as the two fronts part under the button: `vent` is half
+    the opening at the hem, a share of the half width (0: closed), and `cut` how much of the fronts' corners is cut
+    away there. A thigh that is raised takes the front of the skirt on its side with it (seated, the fronts lie on
+    the lap), and one that goes back takes the back. Gives the Coat: its loft, for what lies on it."""
+    trunk, pelvis, rest = k.b.trunk, k.b.pelvis, k.fig._rest()
+
+    def on(part, y, more=0.0):      # (half width, front, back) of a part of the body at a height, and `more` off it
+        rx, rz, zc, _flat = part.at(y)
+        return [rx + more, zc + rz + more, zc - rz - more]
+
+    yn = trunk.s[-1][0]
+    # the shoulders: the highest place where the trunk is still nearly as wide as it gets (square shoulders are high)
+    neck = yn - 0.01
+    top = min(max(s[0] for s in trunk.s if s[1] >= 0.9 * max(x[1] for x in trunk.s)), neck - 0.02)
+    seat = max(pelvis.s, key=lambda s: s[1])[0]                   # the height at which the hips are widest
+    hem = pelvis.s[0][0] + above
+    pocket = hem + 0.36 * (top - hem)                             # the pockets' line: a share of the coat's length
+    # the waist: where the trunk is narrowest, over the pockets' line
+    middle = max(min((s for s in trunk.s if s[0] < top - 0.06), key=lambda s: s[1])[0], pocket + 0.035)
+    # the chest: the one place where the trunk stands furthest out of the straight line from the waist to the shoulders
+    bulge = lambda s: sum(max(0.0, sign * (a - (p + (q - p) * (s[0] - middle) / (top - middle))))      # noqa: E731
+                          for a, p, q, sign in zip(on(trunk, s[0]), on(trunk, middle), on(trunk, top), (1.0, 1.0, -1.0)))
+    chest = max((s for s in trunk.s if middle + 0.03 < s[0] < top - 0.03), key=bulge, default=((middle + top) / 2,))[0]
+    size = {y: on(trunk, y, out) for y in (middle, chest, top, neck)}
+    hips = on(pelvis, seat)
+    size[hem] = [hips[0] + flare, hips[1] + hang, hips[2] - hang]
+    sleeve = next((k.limbs[name][1].at(0.0)[0] for name in ("sleeve_l/upper", "sleeve_l/sleeve") if name in k.limbs), 0.0)
+    arm = abs(rest["left_upper_arm"].position.x) + shoulder * sleeve          # the shoulder's joint, and that much of the sleeve
+    size[top][0] = max(size[top][0], arm)
+    line = lambda a, b, y: [p + (q - p) * (y - a) / (b - a) for p, q in zip(size[a], size[b])]      # noqa: E731
+    # the waist: taken in from the straight line between the hem and the chest toward the trunk's own
+    size[middle] = [tight + (1.0 - waist) * (straight - tight) if sign * (straight - tight) > 0 else tight
+                    for tight, straight, sign in zip(size[middle], line(hem, chest, middle), (1.0, 1.0, -1.0))]
+    # Between two rings the cloth runs straight. From the waist up it is nowhere so far inside the trunk's own
+    # surface that a dent would reach the trunk as it is drawn under it: the nearer ring is let out for that
+    upper = sorted(size)[1:]
+    for _ in range(4):
+        for s in trunk.s:
+            if upper[0] < s[0] < upper[-1] and s[0] not in size:
+                a, b = max(q for q in upper if q <= s[0]), min(q for q in upper if q >= s[0])
+                t = (s[0] - a) / (b - a)
+                near, share = (a, 1.0 - t) if t < 0.5 else (b, t)
+                for i, (want, have, sign) in enumerate(zip(on(trunk, s[0], 0.007 - under), line(a, b, s[0]), (1.0, 1.0, -1.0))):
+                    if sign * (want - have) > 0:
+                        size[near][i] += (want - have) / share
+    # and the skirt hangs straight from the waist to the hem: the hem is let out (by up to 15 mm) until that line
+    # is clear of the hips all the way down, by half of `hang`: it flares over the seat. Hips that swell too soon
+    # under the waist for that let the pockets' line out as well
+    under_waist = [(s[0], on(part, s[0], more)) for part, more in ((pelvis, 0.5 * hang), (trunk, 0.007 - under))
+                   for s in part.s if hem < s[0] < middle]
+    for i, sign in enumerate((1.0, 1.0, -1.0)):
+        most = size[hem][i] + sign * 0.015
+        for y, want in under_waist:
+            t = (middle - y) / (middle - hem)
+            least = (want[i] - size[middle][i] * (1.0 - t)) / t
+            if sign * (least - size[hem][i]) > 0:
+                size[hem][i] = least if sign * (most - least) > 0 else most
+    size[pocket] = line(hem, middle, pocket)
+    for i, sign in enumerate((1.0, 1.0, -1.0)):
+        for y, want in under_waist:
+            a, b = (hem, pocket) if y <= pocket else (pocket, middle)
+            t = (y - a) / (b - a)
+            short = sign * (want[i] - (size[a][i] + (size[b][i] - size[a][i]) * t))
+            if short > 0:
+                size[pocket][i] += sign * short / max(0.3, t if a == hem else 1.0 - t)
+    heights = sorted(size)
+    # the coat takes the trunk's place: what is drawn of the trunk under it is that much slimmer
+    for n, part in enumerate(k.made):
+        if part.name == "body/body":
+            slim = Loft([(s[0], max(0.004, s[1] - under), max(0.004, s[2] - under), s[3], own or s[4]) for s, own in zip(trunk.s, trunk.o)],
+                        trunk.flat, trunk.crease, trunk.facet, stagger=trunk.stagger)
+            k.made[n] = slim.limb(part.name, k.chest, part.material, k.fig.looks)
+    folds = dict(zip(heights, (vent + 0.16, 0.36, 0.3, 0.42, 0.5, 0.5)))
+    loft = Loft([(y, w, (front - back) / 2, (front + back) / 2,
+                  _open_front(flat, vent if y == hem else 0.0, -0.2 if y == hem and vent else 1.0, folds[y]))
+                 for y, (w, front, back) in sorted(size.items())], crease=crease, facet=facet)
+    sides = loft.sides
+
+    def covered(drop):              # with its point that far down, the shoulder's line still passes over the trunk's own shoulder
+        x0, y0 = loft.at(top - drop)[0], top - drop
+        x1, y1 = size[neck][0], neck
+        return all(y0 + (x0 - s[1]) / (x0 - x1) * (y1 - y0) >= s[0] - 0.002 for s in trunk.s if top <= s[0] < neck and s[1] > x1)
+
+    drop = next((d for d in (slope, 0.75 * slope, 0.5 * slope, 0.25 * slope) if covered(d)), 0.0)
+
+    def lifted(j, i):               # how far corner i of ring j is off its ring's height
+        if j == 0:                  # the hem is level, but for the fronts' corners, which are cut away
+            return cut if vent and i in (3, 4, 5, 6) else 0.0
+        if j >= len(heights) - 2:   # the shoulders and the neck, each an edge of its own: a shoulder slopes down to its point
+            return 0.0 if j > len(heights) - 2 else -drop * {0: 1.0, 9: 1.0, 10: 1.0, 14: 1.0, 1: 0.5, 8: 0.5, 11: 0.5, 13: 0.5}.get(i, 0.0)
+        # (by no more than three tenths of the way to the nearer ring: two rings never cross)
+        reach = min(stagger, 0.3 * min(heights[j] - heights[j - 1], heights[j + 1] - heights[j]))
+        return reach * _ZIGZAG[i] * (-1.0 if j % 2 else 1.0)
+
+    def corner(j, i):               # the corner, moved along the coat's own edge through it
+        y = heights[j] + lifted(j, i)
+        x, z = loft.ring(y)[i]
+        return (x, y, z)
+
+    drawn = [[corner(j, i) for i in range(sides)] for j in range(len(heights))]
+    # the skirt as the legs have it: a thigh's angle from hanging, to the front and to the back (in the hips' own
+    # space; the few degrees of a stance are not a raised thigh). Its fronts turn about the top of a level thigh,
+    # or about the pockets' line if that is lower (they are then lifted onto the thigh as well)
+    hip = rest["left_upper_leg"].position.y - k.hips.lift                 # the hip's joint, at the height the hips are drawn at
+    lap = hip + max(s[2] + s[3] for s in k.b.thigh) * k.b.leg + 0.006
+    turns, lap = min(pocket, lap), max(0.0, lap - pocket)
+
+    def raised(side):
+        a, b = (_into(k.hips, k.frames[f"{side}_{bone}"].position) for bone in ("upper_leg", "lower_leg"))
+        deg = math.degrees(math.atan2(b[2] - a[2], a[1] - b[1]))
+        return (a[0], math.radians(max(0.0, min(90.0, (deg - 8.0) * 90.0 / 82.0))), math.radians(max(0.0, min(60.0, -deg - 12.0))))
+
+    legs = sorted(raised(side) for side in ("left", "right"))                    # the leg on the side x < 0, then the other
+    swing = lambda x: legs[0] if x < -1e-6 else legs[1] if x > 1e-6 else tuple((a + b) / 2 for a, b in zip(*legs))  # noqa: E731
+
+    def laid(j, i, p):              # a corner of the skirt, where the thighs put it
+        _x, fore, aft = swing(p[0])
+        low = max(0.0, turns - p[1])                                              # how far it hangs under where the skirt turns
+        if i in _FRONT:
+            return (p[0], p[1] + low * (1.0 - math.cos(fore)) + lap * math.sin(fore), p[2] + low * math.sin(fore))
+        if i in _FLOOR or j:
+            return p
+        return (p[0], p[1] + low * (1.0 - math.cos(aft)), p[2] - low * math.sin(aft))
+
+    posed = [[_into(k.chest, k.hips.point(laid(j, i, p))) if j < 2 else p for i, p in enumerate(ring)] for j, ring in enumerate(drawn)]
+    # closed on a point at each end: under the hem behind the opening's floor (every side of the hem is seen from
+    # there, so its underside is a fan with no fold), and in the neck
+    floor = min(z for _x, z in loft.ring(hem)[4:6]) if vent else loft.at(hem)[2]
+    under = (0.0, hem - 2e-5, (floor + loft.back(0.0, hem)) / 2)
+    ends = (_into(k.chest, k.hips.point(under)), (0.0, neck + 2e-5, loft.at(neck)[2]))
+    _skin(k, k.chest, "jacket/coat", posed, material, crease, facet, measured=drawn, ends=ends)
+    fronts = {}
+    for sx in (-1, 1):              # what lies on a front of the skirt turns with it about the pockets' line
+        _x, fore, _aft = swing(sx)
+        i = 1 if sx > 0 else 8      # (that front's outer corner: from the pockets' line to the hem, as it hangs and as it is laid)
+        (_xa, ya, za), (_xb, yb, zb) = drawn[1][i], drawn[0][i]
+        (_xc, yc, zc), (_xd, yd, zd) = laid(1, i, drawn[1][i]), laid(0, i, drawn[0][i])
+        turn = math.degrees(math.atan2(zd - zc, yc - yd) - math.atan2(zb - za, ya - yb))
+        fronts[sx] = Worn(_Raised(k.hips, lap * math.sin(fore)), rotation(0, turn, 0), (0.0, ya, za))
+    return Coat(loft, tuple(tuple(ring) for ring in posed), middle, pocket, hem, fronts)
+
+
+def _seam(k: Parts, coat: Coat, material: str, half: float = 0.0015, proud: float = 0.0015) -> None:
+    """The seam down the middle of a coat's back: a line of `material` along the coat's own edge there, from the
+    hem to the neck, so it is one line that lies on the cloth wherever the cloth goes."""
+    _skin(k, k.chest, "jacket/seam", [[(x + half, y, z + 0.004), (x - half, y, z + 0.004), (x - half, y, z - proud), (x + half, y, z - proud)]
+                                      for x, y, z in (ring[_SEAM] for ring in coat.rings)], material)
+
+
+def _lapels(k: Parts, material: str, to: float = 0.25, notch: float = 0.62, wide: float = 0.86, proud: float = 0.008,
+            over: int = -1, on: Loft | None = None) -> None:
     """A jacket's lapels, with the ends of its collar: on each side of the chest a panel with thickness from the
     side of the neck down to a point at the button (`to`, a share of the way from the belt to the neck). Its
-    inner edge is the side of the opening the shirt shows in; its outer edge runs out to the lapel's point
-    (`notch` of the way up from the button to the neck, `wide` of the chest's flat front from the middle), comes
-    in along the lapel's top edge to the notch, steps out again as the end of the collar and runs up to the side
-    of the neck, where the collar that stands round the neck takes over. The lapel on the side `over` (-1: the
-    wearer's left, as a man's jacket closes; 1: the right) crosses over the other at the button."""
-    trunk = k.b.trunk
-    yn, rxn = trunk.s[-1][:2]
-    y0, y1 = _up(k, to), yn - 0.02
+    inner edge is the side of the opening the shirt shows in, one straight line from the neck to the button; its
+    outer edge runs out to the lapel's point (`notch` of the way up from the button to the neck, `wide` of the
+    chest's flat front from the middle), comes in along the lapel's top edge to the notch, steps out again as
+    the end of the collar and runs up to the side of the neck, where the collar that stands round the neck takes
+    over. The lapel on the side `over` (-1: the wearer's left, as a man's jacket closes; 1: the right) crosses
+    over the other at the button. They lie on `on` (a jacket's body, `Coat.loft`; the trunk if none is given)."""
+    on = on or k.b.trunk
+    yn, rxn = k.b.trunk.s[-1][:2]
+    y0, y1 = _up(k, to), min(yn - 0.014, on.s[-1][0] - 0.002)
     tip = y0 + notch * (yn - y0)
-    reach = wide * _across(k, tip)
+    reach = wide * _across(k, tip, on)
     edge = lambda y: (rxn - 0.004) * (y - y0) / (yn - y0)          # noqa: E731  the opening's half width at a height
     for sx in (-1, 1):
         upper = sx == over
         cross = -over * (0.006 if upper else 0.004)                 # both end past the middle, on the under one's side
-        _panel(k, k.chest, "jacket/lapel", trunk,
-               [(y0 - 0.012, cross, cross), (tip, sx * edge(tip), sx * reach),
+        _panel(k, k.chest, "jacket/lapel", on,
+               [(y0 - 0.01, cross, cross), (tip, sx * edge(tip), sx * reach),
                 (tip + 0.014, sx * edge(tip + 0.014), sx * (reach - 0.03)),
                 (tip + 0.017, sx * edge(tip + 0.017), sx * (reach - 0.008)), (y1, sx * (rxn + 0.002), sx * (rxn + 0.016))],
                material, proud=proud if upper else proud - 0.002)
 
 
-def _shirt_bib(k: Parts, material: str, to: float = 0.25, proud: float = 0.005) -> None:
+def _shirt_bib(k: Parts, material: str, to: float = 0.25, proud: float = 0.002, on: Loft | None = None) -> None:
     """The shirt that shows between a jacket's lapels: a triangle on the chest, as wide as the neck under the
-    collar, down to its point at `to` (a share of the way from the belt to the neck)."""
+    collar, down to its point at `to` (a share of the way from the belt to the neck). It lies on `on` (a jacket's
+    body, `Coat.loft`; the trunk if none is given)."""
+    on = on or k.b.trunk
     yn, rxn = k.b.trunk.s[-1][:2]
-    _panel(k, k.chest, "shirt/front", k.b.trunk, [(_up(k, to), 0.0, 0.0), (yn - 0.008, -rxn, rxn)], material, proud=proud)
+    _panel(k, k.chest, "shirt/front", on, [(_up(k, to), 0.0, 0.0), (min(yn - 0.008, on.s[-1][0] - 0.001), -rxn, rxn)], material,
+           proud=proud)
 
 
-def _tie(k: Parts, material: str, to: float = 0.3, half: float = 0.021, proud: float = 0.008, point: float = 0.05) -> None:
-    """A tie, worn with any shirt collar: its knot at the throat, between the collar's points, wider at its top;
-    and its blade down the shirt's front, widening from the knot to `half` and ending in a point at `to` (a share
-    of the way from the belt to the neck), `point` long: under a jacket the point stays behind the lapels where
-    they close. It lies on the shirt and stands off it."""
-    trunk = k.b.trunk
-    yn = trunk.s[-1][0]
-    knot = yn - 0.046
-    at, turn = trunk.seat(0.0, knot, 0.005)
-    _piece(k, k.chest, "tie/knot", [(-0.013, 0.55 * half, 0.008), (0.013, 0.9 * half, 0.008)], material, at, turn)
+def _tie(k: Parts, material: str, to: float = 0.3, half: float = 0.021, proud: float = 0.004, point: float = 0.05,
+         on: Loft | None = None) -> None:
+    """A tie, worn with any shirt collar: its knot at the throat, under the collar's band and between its points,
+    a small trapezoid that is wider at its top; and its blade down the shirt's front, widening from the knot to
+    `half` and ending in a point at `to` (a share of the way from the belt to the neck), `point` long: under a
+    jacket it is given a point lower than where the jacket closes, and goes behind the lapels and the button. It
+    lies on the shirt (on `on`: a jacket's body, `Coat.loft`; the trunk if none is given) and stands off it."""
+    on = on or k.b.trunk
+    yn = k.b.trunk.s[-1][0]
+    knot = yn - 0.03
+    at, turn = on.seat(0.0, knot, 0.002)
+    _piece(k, k.chest, "tie/knot", [(-0.013, 0.55 * half, 0.0045), (0.013, 0.9 * half, 0.0045)], material, at, turn)
     y0 = _up(k, to)
-    _panel(k, k.chest, "tie/blade", trunk, [(y0, 0.0, 0.0), (y0 + point, -half, half), (knot - 0.008, -0.55 * half, 0.55 * half)],
+    _panel(k, k.chest, "tie/blade", on, [(y0, 0.0, 0.0), (y0 + point, -half, half), (knot - 0.008, -0.55 * half, 0.55 * half)],
            material, proud=proud, deep=0.004)
 
 
-def _shirt_cuffs(k: Parts, material: str, show: float = 0.09) -> None:
-    """A shirt's cuffs under a jacket's sleeves: a band that comes out of each long sleeve at the wrist, `show` of
-    the forearm's length past the sleeve's end, slimmer than the sleeve."""
+def _shirt_cuffs(k: Parts, material: str, show: float = 0.09, slim: float = 0.004) -> None:
+    """A shirt's cuffs under a jacket's sleeves: one plain band that comes out of each long sleeve at the wrist,
+    `show` of the forearm's length past the sleeve's end, `slim` slimmer than the sleeve is there."""
     for side in ("l", "r"):
-        k.cuff(f"cuff_{side}/cuff", f"sleeve_{side}/fore", 0.95, 1.02 + show, material, out=-0.004)
+        on, sleeve = k.limbs[f"sleeve_{side}/fore"]
+        y, wide, deep, forward = sleeve.s[-1][:4]
+        k.loft(on, f"cuff_{side}/cuff", Loft([(y - 0.012, wide - slim, deep - slim, forward),
+                                             (y + show * on.length, wide - slim, deep - slim, forward)], profile=sleeve.profile), material)
 
 
 def _sleeve_buttons(k: Parts, material: str, count: int = 3, size: float = 0.0062) -> None:
@@ -2004,46 +2320,50 @@ def _turn_ups(k: Parts, material: str, tall: float = 0.1) -> None:
         k.cuff(f"leg_{side}/turn-up", f"leg_{side}/shin", 0.935 - tall, 0.935, material, out=0.005)
 
 
-def _jacket(k: Parts, material: str, trim: str, buttons: str, closes: float = 0.25) -> Loft:
-    """A single-breasted jacket over the trunk (which is its cloth, as the long sleeves are): a skirt over the
-    hips, open in front below the button; lapels down to the button at `closes` (a share of the way from the belt
-    to the neck); a collar that stands round the back of the neck and stops at its sides; a flap pocket on each
-    hip; a seam down the middle of the back and the edge of the front that closes over the other, in `trim`;
-    buttons on the sleeves. Gives its skirt."""
-    trunk = k.b.trunk
-    yn = trunk.s[-1][0]
-    skirt, waist = _skirt(k, material)
-    _lapels(k, material, to=closes)
-    _stand(k, material, low=0.04, tilt=14.0, name="jacket/collar", out=0.006, front=0.75)
-    _button(k, k.chest, "jacket/button", trunk, 0.0, _up(k, closes) - 0.004, buttons, 0.0105, 0.006)
-    y = BELT_Y + 0.004                                          # the pockets' flaps, on the skirt's flat front
-    half = 0.36 * _across(k, y, skirt)
-    for sx in (-1, 1):          # (a flap's outer end goes round the skirt's corner: it is thick enough to stay in it)
-        _flap(k, k.hips, skirt, sx * (_across(k, y, skirt) - half + 0.008), y, half, material, tall=0.03, point=0.0,
-              name="jacket/flap")
-    # the seam down the back, on each of the three parts it runs over, and the front's edge from the button down
-    line = lambda carry, name, loft, y0, y1, x=0.0, back=True: _panel(      # noqa: E731
-        k, carry, name, loft, [(y0, x - 0.0015, x + 0.0015), (y1, x - 0.0015, x + 0.0015)], trim, proud=0.0025, back=back)
-    hem, top, chest = skirt.s[0][0], skirt.s[-2][0], waist.s[-2][0]
-    line(k.hips, "jacket/seam", skirt, hem + 0.001, top - 0.001)
-    line(k.chest, "jacket/seam", waist, top, chest)
-    line(k.chest, "jacket/seam", trunk, chest + 0.001, yn - 0.04)
-    line(k.hips, "jacket/edge", skirt, skirt.s[3][0] + 0.002, top - 0.001, x=0.006, back=False)
-    line(k.chest, "jacket/edge", waist, top, _up(k, closes) - 0.012, x=0.006, back=False)
+def _closes(k: Parts, coat: Coat) -> float:
+    """Where a jacket closes, as the share of the way from the belt to the neck that lapels, a shirt's front and
+    a tie are given: a little over its waist, with its button just under."""
+    return (coat.waist + 0.02 - BELT_Y) / (k.b.trunk.s[-1][0] - BELT_Y)
+
+
+def _jacket(k: Parts, material: str, trim: str, buttons: str) -> Coat:
+    """A single-breasted jacket (the long sleeves are its cloth): a coat over the trunk and the hips, taken in at
+    the waist, with one round button a little over it, and open in front below the pockets; lapels down to the
+    button; a collar that stands round the back of the neck, low and close, and stops at its sides; a flat flap
+    pocket on each hip; a seam down the middle of the back, in `trim`; buttons on the sleeves. Gives its Coat: a
+    shirt's front and a tie lie on its loft, and close where it does (`_closes`)."""
+    coat = _coat(k, material)
+    closes = _closes(k, coat)
+    _lapels(k, material, to=closes, on=coat.loft)
+    # (its collar: a closed shirt collar's band, `_suit`'s, stands inside it and shows over it)
+    _stand(k, material, low=0.036, tilt=20.0, name="jacket/collar", out=0.002, front=0.75)
+    # the button, under the point where the lapels cross
+    _button(k, k.chest, "jacket/button", coat.loft, 0.0, _up(k, closes) - 0.022, buttons, 0.0105, 0.003, shape="round")
+    y = coat.pocket - 0.006                                    # the pockets' flaps, on the skirt's flat front
+    reach = _across(k, y - 0.015, coat.loft)
+    half = 0.4 * reach
+    for sx in (-1, 1):
+        _flap(k, coat.fronts[sx], coat.loft, sx * (reach - half - 0.004), y, half, material, tall=0.028, point=0.0,
+              name="jacket/flap", thick=0.0035, sink=-0.0005)
+    _seam(k, coat, trim)
     _sleeve_buttons(k, buttons)
-    return skirt
+    return coat
 
 
 def _suit(k: Parts) -> None:
-    """A suit, bare-headed: a shirt whose collar is closed over a tie, a jacket, cuffs at the wrists, trousers with
-    turn-ups; in the person's `shirt`, `tie`, `top` (with `trim` and `buttons`) and `bottom`."""
+    """A suit, bare-headed: a jacket; a shirt whose collar is closed over a tie, its two wings framing the knot;
+    cuffs at the wrists; trousers, with turn-ups if the person has them (`turn_ups`); in the person's `top` (with
+    `trim` and `buttons`), `shirt`, `tie` and `bottom`."""
     p = k.p
-    _open_collar(k, drop=0.062, under=p.shirt, material=p.shirt, spread=-0.012, high=0.006, wide=0.017, thick=0.0035)
-    _shirt_bib(k, p.shirt)
-    _tie(k, p.tie)
-    _jacket(k, p.top, p.trim, p.buttons)
+    coat = _jacket(k, p.top, p.trim, p.buttons)
+    closes = _closes(k, coat)
+    _open_collar(k, tilt=20.0, drop=0.05, under=p.shirt, material=p.shirt, spread=-0.018, high=0.004, wide=0.017, thick=0.0015,
+                 on=coat.loft, top=0.017, rise=-0.016, lift=0.003)
+    _shirt_bib(k, p.shirt, to=closes, on=coat.loft)
+    _tie(k, p.tie, to=closes - 0.03, on=coat.loft)
     _shirt_cuffs(k, p.shirt)
-    _turn_ups(k, p.bottom)
+    if p.turn_ups:
+        _turn_ups(k, p.bottom, p.turn_ups)
 
 
 OUTFITS: dict[str, Callable[[Parts], None]] = {"officer": _officer, "cook": _cook, "firefighter": _firefighter, "suit": _suit}
@@ -2054,7 +2374,30 @@ def _whole(fig: m.MascotFigure, frames) -> list:
     k = Parts(fig, frames, PEOPLE[fig.who])
     _body(k)
     OUTFITS[k.p.outfit](k)
-    return k.made + fig._take_extra()      # the face's strokes (brows, the mouth's line) are drawn through the figure
+    made = k.made if k.b.head == 1.0 else [_sized(part) for part in k.made]
+    return made + fig._take_extra()        # the face's strokes (brows, the mouth's line) are drawn through the figure
+
+
+def _sized(part: Limb) -> Limb:
+    """A part that a Sized carry made larger or smaller has its size in its basis. Every finish takes that but
+    the paper one, whose engine turns a part and does not size it: so the size goes into the part's own formulas
+    (and what it tells the low-poly finish of its sides), and its basis is left a pure turn."""
+    size = math.sqrt(sum(part.basis[i][0] ** 2 for i in range(3)))
+    if abs(size - 1.0) < 1e-9:
+        return part
+    role = " ".join(_facets(tag, size) for tag in part.role.split())
+    return _replace(part, basis=tuple(tuple(x / size for x in row) for row in part.basis), role=role,
+                    radii=tuple(r * size for r in part.radii), **{axis: f"{size:.6f}*({getattr(part, axis)})" for axis in "xyz"})
+
+
+def _facets(tag: str, size: float) -> str:
+    """A Loft's "facet:<across>:<deep>:<sides>:<bands>" for the same part `size` times as large: its sides and its
+    bands are that much wider (the facets it asks for stay as large and as deep)."""
+    field = tag.split(":")
+    if field[0] != "facet" or len(field) < 5:
+        return tag
+    wider = lambda text: ",".join(str(round(float(x) * size)) for x in text.split(","))       # noqa: E731
+    return ":".join([*field[:3], wider(field[3]), wider(field[4]), *field[5:]])
 
 
 def enlist(person: Person) -> Person:
