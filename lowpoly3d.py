@@ -47,7 +47,7 @@ Shapes are `Loft`s: sections stacked along a height or along a bone, each an oct
 with `Loft.seat`, `Loft.around`, `Loft.band`, `Parts.flat` and `Parts.hung`, so it sits on the facets in every view;
 cloth that lies on one and follows it (a lapel, a shirt's front, a tie's blade, a seam) is a `_panel`.
 
-Sizes come from measuring against the sheet, not from the eye: `lowpoly-blender/tools/round.sh` prints the outline
+Sizes come from measuring against the sheet, not from the eye: `characters/tools/lowpoly/round.sh` prints the outline
 match, the centimetres each body band is off, and a surface score. Change a table, run it, read the numbers.
 
 Draw it with `finish="lowpoly"` (characters.blender): every part becomes a few flat facets that ride the figure.
@@ -738,11 +738,11 @@ BODIES = {
                             (0.935, 0.065, 0.072, 0.006, face_planes(0.45, 0.82, 0.78, 0.25)),
                             (0.962, 0.054, 0.058, 0.0, face_planes(0.4, 0.8, 0.75, 0.3))], HEAD_K)),
         brow=0.36, arm=0.8, leg=0.98, rest_hands=(0.238, 0.498, -0.006), hand=0.88, foot=0.93),
-    # an adult as a turnaround sheet draws one (the anchor's: lowpoly-blender/ref/anchor-sheet.png), where the man
+    # an adult as a turnaround sheet draws one (the anchor's: characters/tools/lowpoly/ref/anchor-sheet.png), where the man
     # and the woman are heroic toys: of the height, the head from chin to the top of its hair is 0.15 (theirs
     # 0.19, 0.225 with a cap), the legs part at 0.45 (0.39), the shoulders are at 0.76 (0.70) and 0.20 apart at
     # the joints, the arm is 0.28 from shoulder to wrist and the hand 0.12, the trunk is 0.21 wide at the chest
-    # (0.25) and the legs are slim and straight. Measured with lowpoly-blender/tools/sheet_match.py.
+    # (0.25) and the legs are slim and straight. Measured with characters/tools/lowpoly/sheet_match.py.
     # Its skeleton: hip joints 0.50 above the ground standing, knees 0.27, shoulders 0.763 (x 0.098), neck 0.835;
     # upper arm 0.156, forearm 0.122. Its tables are on the man's heights (`up`): add 0.047 for where a section
     # is on the figure as it stands.

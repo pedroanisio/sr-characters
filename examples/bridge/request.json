@@ -1,0 +1,26 @@
+{
+ "schema": "characters.cutout-request/1.0.0",
+ "location": "/home/dev/src/viral-video-orchestrator/vendor/srstudio/d80eb6d/tests/data/location-bridge/airliner-1080x1920.json",
+ "shot": "down-the-aisle",
+ "mark": "aisle",
+ "who": "anchor",
+ "pose": "idle",
+ "fps": 30,
+ "seconds": 3.0,
+ "facing_deg": 180.0,
+ "actions": [
+  {"at": 0.25, "do": "wave", "side": "right"},
+  {"at": 1.95, "do": "present", "side": "left"}
+ ],
+ "takes": [
+  {"id": "demo-take-1", "at": 0.5, "words": [
+   {"text": "Boa", "start": 0.00, "end": 0.22},
+   {"text": "noite,", "start": 0.24, "end": 0.62},
+   {"text": "senhores", "start": 0.70, "end": 1.12},
+   {"text": "passageiros,", "start": 1.14, "end": 1.72},
+   {"text": "bem-vindos", "start": 1.80, "end": 2.20},
+   {"text": "a", "start": 2.20, "end": 2.26},
+   {"text": "bordo.", "start": 2.27, "end": 2.45}
+  ]}
+ ]
+}

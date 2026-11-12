@@ -803,7 +803,7 @@ def test_a_build_sizes_its_head_and_a_hat_follows_it():
 
 
 def test_the_tall_build_stands_on_the_ground_with_its_hands_at_the_measured_height():
-    """The third build, an adult as the anchor's sheet draws one (measured with lowpoly-blender/tools/sheet_match.py
+    """The third build, an adult as the anchor's sheet draws one (measured with characters/tools/lowpoly/sheet_match.py
     and its SHEETS["anchor"]): 1 m from its soles to the top of its hair, the legs parting at 0.45, the shoulders at
     0.76, an arm of 0.28 to the wrist; standing, its shoes are flat on the ground and its hands hang beside the
     thighs, the wrists at 0.50 and the fingertips at 0.39."""

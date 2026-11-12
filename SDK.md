@@ -156,7 +156,7 @@ today's kit (a new face or build may be drawn by the same seed later): `cast.sav
 keep a character for good. `$PY characters/lowpoly_cast.py sheet 7 6 out.png [outfit=suit ...]` draws six people
 of seed 7 side by side.
 
-Sizes are set from measurements, not by eye: `lowpoly-blender/tools/round.sh` renders the proofs of all five
+Sizes are set from measurements, not by eye: `characters/tools/lowpoly/round.sh` renders the proofs of all five
 people and prints, against the officer's reference sheet, the outline match (IoU), how many centimetres each
 body band is off (front and profile) and a surface score (contrast, edges and facet size of the cloth).
 `tools/sheet_match.py` measures any person against its own sheet: `SHEETS` holds what a sheet needs (the anchor's:
