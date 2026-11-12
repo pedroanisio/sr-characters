@@ -147,10 +147,8 @@ def _build(recipe: dict) -> lp.Person:
 
 def _enlist(person: lp.Person) -> lp.Person:
     lp.enlist(person)
-    from . import film              # a film checks its cast by name (film.CAST, film.PEOPLE): the new person is in it
-    for table in ("PEOPLE", "CAST"):
-        if person.key not in getattr(film, table):
-            setattr(film, table, (*getattr(film, table), person.key))
+    from . import film              # (film imports the families: not at the top of this module)
+    film.enlist(person.key)
     return person
 
 
@@ -166,8 +164,7 @@ def dismiss(who) -> None:
     if getattr(gone, "face", None) and gone.face.endswith(f"~{key}"):
         lp.FACES.pop(gone.face, None)
     from . import film
-    for table in ("PEOPLE", "CAST"):
-        setattr(film, table, tuple(k for k in getattr(film, table) if k != key))
+    film.dismiss(key)
 
 
 def person(seed, key: str | None = None, name: str | None = None, vary: float = 1.0, **fixed) -> lp.Person:

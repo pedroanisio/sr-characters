@@ -97,6 +97,10 @@ def test_a_person_is_saved_and_read_back(tmp_path):
     again = cast.load(path)
     assert (asdict(again), lp.BODIES[again.body], lp.FACES.get(again.face)) == before
     assert again.key in lp.PEOPLE and m.figure(again.key, "idle").parts()
+    with pytest.raises(film.FilmError):
+        film.dismiss("sergeant")                             # the cast's own people stay
+    with pytest.raises(film.FilmError):
+        film.enlist("nobody")
 
 
 def test_the_uniform_of_one_on_somebody_else():

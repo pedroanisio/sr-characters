@@ -41,6 +41,7 @@ from .poses import POSES
 PLUSH = tuple(plush3d.ANIMALS)                                   # the plush family
 PEOPLE = (*vinyl3d.PEOPLE, *lowpoly3d.PEOPLE)                   # vinyl toys (vinyl3d), low-poly grown-ups (lowpoly3d)
 CAST = (*PLUSH, *PEOPLE)                                         # the whole cast of a film
+_OWN = CAST                                                      # the cast as the families give it (see dismiss)
 _REMOVED = ("dev", "frog", "chick", "mouse")                     # no longer characters (kept in characters_legacy)
 
 # which way a positive roll leans a figure, measured: +1 if it leans toward the picture's right for a camera on +z
@@ -57,6 +58,27 @@ def _known(who: str) -> None:
     if who in _REMOVED:
         raise FilmError(f"{who} was removed from the cast: films are made with the plush family ({', '.join(CAST)})")
     raise FilmError(f"no character {who!r}; the cast is {', '.join(CAST)}")
+
+
+def enlist(who: str, person: bool = True) -> None:
+    """Puts a character made at run time in the cast (characters.lowpoly_cast draws people from a seed): `who` is
+    already registered with its family (its Spec, its poses, what draws it). `person`: it has no paws, ears or
+    tail, as the vinyl and the low-poly people (see can())."""
+    global CAST, PEOPLE
+    if who not in POSES or who not in mascots3d.SPECS:
+        raise FilmError(f"{who!r} is not registered with a family: it has no Spec or no poses")
+    if who not in CAST:
+        CAST = (*CAST, who)
+    if person and who not in PEOPLE:
+        PEOPLE = (*PEOPLE, who)
+
+
+def dismiss(who: str) -> None:
+    """Takes out of the cast a character that enlist() put there."""
+    global CAST, PEOPLE
+    if who in _OWN:
+        raise FilmError(f"{who} is of the cast itself: only a character made at run time leaves it")
+    CAST, PEOPLE = tuple(k for k in CAST if k != who), tuple(k for k in PEOPLE if k != who)
 
 
 MOVES = ("body", "blinks", "gaze", "squash", "hop", "travel", "paws", "ears", "tail", "eyelids", "blush", "eye darts",
