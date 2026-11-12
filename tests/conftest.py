@@ -14,6 +14,8 @@ SLOW = ("test_every_pose_builds", "test_every_action_plays", "test_turning_going
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: plays every action or pose of the whole cast; minutes, not seconds")
+    config.addinivalue_line("markers", "looks: renders a reference still again and compares it (test_looks.py); "
+                                       "the Blender stills only run with -m looks or LOOKS=1")
 
 
 def pytest_collection_modifyitems(items):
