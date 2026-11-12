@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+# renders and logs: rebuilt by the examples and the tools
+examples/out/
+examples/gpu-guard.csv
+# reference pictures and models (390 MB, they do not change): kept on disk, not in history
+sheets/
