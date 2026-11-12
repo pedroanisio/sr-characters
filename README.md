@@ -197,7 +197,7 @@ PSNR or better against the unslimmed one. A document still over the limit is ref
 |---|---|
 | `SDK.md` | how to make a video: setup, every call, poses, actions, checks, limits |
 | `film.py` | the SDK: `Film`, `Actor`, `can()`, `strip()` |
-| `motion.py` | `perform()`: acting between poses, gaze, face, travel; re-exports `actions` and `speech` |
+| `motion.py` | `perform()`: acting between poses, gaze, face, travel, as a short list of steps (private functions: `_Script`, `_key_body`, `_key_things`, `_key_face` and what they call); re-exports `actions` and `speech` |
 | `actions.py` | the action library: `Action`, `ACTIONS`, `PAW_ACTIONS`, `GAITS`; a new action goes here |
 | `speech.py` | lip-sync: `lipsync()` and the `LIP_*` constants (set them here, not on `motion`) |
 | `staging.py` | `nuzzle()`, `merged()`, `clear_in_motion()`: heads together without merging; `bodies()`, `bodies_in_motion()`: whole bodies that run into each other (srlocations.collision) |
@@ -220,7 +220,7 @@ PSNR or better against the unslimmed one. A document still over the limit is ref
 | `__init__.py` | `CAST`, `POSES`, `check()`, the paths of the engine and the interpreter |
 | `sheets/` | model sheets rendered from the models |
 | `examples/` | `film_hello.py` (the SDK's example), `motion_demo.py` (pose-to-pose against acted) |
-| `tests/` | by area: `test_plush.py` (cast, acting, film), `test_rig.py`, `test_vinyl.py`, `test_lowpoly.py`, `test_finishes.py`, `test_soundtrack.py`, `test_clip.py`; `helpers.py`, `conftest.py`. All: about 5 minutes; `-m "not slow"`: about 20 seconds |
+| `tests/` | by area: `test_plush.py` (cast, acting, film), `test_rig.py`, `test_vinyl.py`, `test_lowpoly.py`, `test_finishes.py`, `test_soundtrack.py`, `test_clip.py`; `helpers.py`, `conftest.py`. All: about 5 minutes; `-m "not slow"`: about 20 seconds. `test_looks.py` renders ten reference stills again (`looks/`, a few per family) and compares them by number (`lookcheck.py`): the paper ones in every run (7 s, 20 on a busy machine), Blender's with `-m looks` or `LOOKS=1` (30 to 60 s in all); `lookcheck.py accept [name ...]` takes new references after a change that is meant (see SDK.md, Tests) |
 
 ## Gotchas
 

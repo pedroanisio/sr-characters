@@ -95,12 +95,16 @@ f.still("out/officer.png", finish="vinyl")        # a picture in any finish; `st
 There are also low-poly people (`characters/lowpoly3d.py`), made for `finish="lowpoly"`: `sergeant`, a 1 m adult
 in the officer's outfit; `cook`, the same body in a toque, a double-breasted jacket and an apron; and
 `firefighter`, the same body in a helmet and a turnout coat with reflective bands; `captain`, the officer's
-outfit on the second build, a woman; and `anchor`, a news anchor: the man's build in a suit, bare-headed.
+outfit on the second build, a woman; and `anchor`, a news anchor: the third build, `tall` (an adult's
+proportions, where the other two are heroic toys with a large head), in a suit, bare-headed.
 
-A low-poly person is three choices, each written once: a build (`BODIES`: `man`, `woman`: skeleton proportions and
-the sections of trunk, hips, limbs, skull and hair), an outfit (`OUTFITS`: `officer`, `cook`, `firefighter`,
+A low-poly person is three choices, each written once: a build (`BODIES`: `man`, `woman`, `tall`: skeleton
+proportions, the sections of trunk, hips, limbs, skull and hair, and how large the head is and how far up it is
+carried: `Body.head`, `head_up`, `up`, which size the head with all it carries, a hat too, and keep the trunk on
+the man's heights so that an outfit fits every build), an outfit (`OUTFITS`: `officer`, `cook`, `firefighter`,
 `suit`) and a `Person`: colours, and a few options of its own (hair on top of a bare head: `hair_style`, with
-`temples` for sides of another colour; `brow`; `shoe` for a low dress shoe, `sole`; `shirt` and `tie`). Shapes
+`temples` for sides of another colour; `brow`; `shoe` for a low dress shoe, `sole`; `shirt`, `tie` and
+`turn_ups` for a suit). Shapes
 are `Loft`s: octagonal sections stacked along a height, or along a bone
 (`Parts.span`), whose corners the finish keeps exactly. Place what lies on one with `Loft.seat` / `Parts.flat`
 (a pocket, a badge), `Loft.around` / `Parts.hung` (a pouch), `Loft.band` / `Parts.cuff` (a belt, a stripe), so it
@@ -110,15 +114,54 @@ limbs, the skull's face planes), and a loft can ask the finish to break its side
 are reusable pieces (`_open_collar`, `_pocket`, `_epaulettes`, `_badge`, `_duty_belt` with `_pouch` and `_radio`,
 `_peaked_cap`, `_stand`), placed as shares of the build (`_up`, `_across`), so they fit both builds. Cloth that
 lies on a part and follows it is a `_panel` (rows of height and two edges; it bends where the part does). The
-suit is made of such pieces, each usable alone: `_jacket` (`_skirt`: the cloth from chest to hem, open in front
-over the hips; `_lapels`; `_stand` as its collar; `_flap` pockets; a back seam; `_sleeve_buttons`), a shirt
-(`_open_collar` closed over a tie, `_shirt_bib`, `_shirt_cuffs`), `_tie`, `_turn_ups`: a lawyer or a groom is
+suit is made of such pieces, each usable alone: `_jacket` (`_coat`: its body, one shell over the trunk and the
+hips, measured on the build, with six rings whose corners are staggered and large facets, so no level line runs
+round it; it lies on the trunk, which is drawn 9 mm slimmer under it, and its skirt hangs off the hips to a hem
+3 cm over where the legs part; taken in at the waist, shoulders out to the arms, open in front below the
+pockets; the chest carries it
+from the waist up and the hips its skirt, the cloth between runs from one to the other, and a raised thigh takes
+the skirt's front with it, onto the lap when seated; it gives a `Coat`, whose `loft` is what lies on it is
+placed on; `_lapels`; `_stand` as its collar; flat `_flap` pockets; `_seam` down the back; a round `_button`;
+`_sleeve_buttons`), a shirt (`_open_collar` closed over a tie, its wings framing the knot, `_shirt_bib`,
+`_shirt_cuffs`), `_tie`, `_turn_ups` (worn when `Person.turn_ups` says how tall); the shirt's parts and the tie
+take `on=` (a coat's loft; the trunk with no jacket). A part drawn corner by corner, whose rings need not be
+level nor carried by one bone, is a `_skin` (with `_into`, which brings a posed place into a carry's space); it
+is written as several parts of one name when one formula would be longer than the paper finish's engine takes
+(2,048 characters). A lawyer or a groom is
 another `Person` in the same outfit, a presenter in shirt sleeves a new outfit of three of them. Hands (palm,
 four fingers, thumb) and boots (sole with a heel, upper) are drawn parts sized by `Body.hand` / `Body.foot`.
+
+A face and a head of hair are choices too, per person. `Person.face` names a `Face` in `FACES`: one table with
+the skull's planes, the eyes (place, opening, outline, iris, `lid` for a lid that rests part way down), the brows
+(`brows=None` a bar of hair, or rows such as `BROW_HEAVY` for an outline of their own), the nose (rows; a fifth
+value gives it wings, `nostril` its nostrils), the mouth (`lips=None` a painted line, `Lips()` modelled lips) and
+the ears. With `face=None` a person has the kit's first face on its build's own skull, as before. `"lean"` is
+the anchor's (a longer, narrower face with a strong jaw, heavy low brows, dark eyes, modelled lips in a lopsided
+smile). A face is written in the head's own measures, so the same face goes on every build and is sized with its
+head; every face draws the whole vocabulary (eyes normal, wide, squint, half, closed, spiral, lids and gaze; all
+mouths, the opening following the voice; all brows). `Person.hair_style` names an entry of `HAIR_TOPS`: a top
+over the build's own hair (`"brushed"`), or a whole head of hair (`Hair`, `"swept"`: sides that leave a sideburn,
+a top whose hem is the hairline and comes down the back of the head in a V), in one colour or, with
+`Person.temples`, two. A second person with this face or this hair is one line:
+`Person("lawyer", "Lawyer", outfit="suit", face="lean", hair_style="swept", hair="lp.hair-black")`.
+
+**People from a seed** (`characters/lowpoly_cast.py`): `cast.person(42)` is always the same new person and
+`cast.person(43)` another. A seed picks among what the kit has (build, outfit and its colours, skin, hair, eyes,
+face, hair style) and moves a few measures a little (limbs, hands, eyes, mouth); any field of `Person` can be
+pinned (`person(42, outfit="suit", body="woman")`) without changing the other draws. `cast.cast(seed, n)` gives
+`n` different people, `cast.vary("sergeant", 3)` puts the sergeant's uniform on somebody else, `cast.dismiss(p)`
+takes an extra out again. The person is in the cast (`film.enlist`), so `film.add(p.key, ...)` works as for the
+kit's own people, and its cloth breaks into facets of its own, the same in every film. A seed is a recipe for
+today's kit (a new face or build may be drawn by the same seed later): `cast.save(p, path)` and `cast.load(path)`
+keep a character for good. `$PY characters/lowpoly_cast.py sheet 7 6 out.png [outfit=suit ...]` draws six people
+of seed 7 side by side.
 
 Sizes are set from measurements, not by eye: `lowpoly-blender/tools/round.sh` renders the proofs of all five
 people and prints, against the officer's reference sheet, the outline match (IoU), how many centimetres each
 body band is off (front and profile) and a surface score (contrast, edges and facet size of the cloth).
+`tools/sheet_match.py` measures any person against its own sheet: `SHEETS` holds what a sheet needs (the anchor's:
+its own body bands, white cloth and grey hair kept), picked by `--sheet` or by the sheet's file name. A `Person`
+made at run time joins the cast with `lowpoly3d.enlist(person)`, as the kit's own do.
 `tools/poses.py <who> <out>` draws the 16 poses and `tools/count.py <out> <who>...` counts triangles
 (about 4,200 for the sergeant, 4,800 for the anchor; the budget is 6,000).
 
@@ -185,6 +228,11 @@ Every method gives the actor back, so calls chain.
 | `lie_down(time, side="right", seconds=1.1)` / `get_up(time, seconds=1.3)` | Lies down on its side where it stands and stays so (its shadow lies flat under it); gets up and stands as it stood. It needs about its own height of room to that side. Give it a face with `pose()`. |
 | `wake_up(time, pose=None)` | Plays `wake-up` and leaves it awake in `pose` (default `sit` if it was seated, else `idle`). |
 | `hold(time, thing, side="right")` | From `time` it holds a thing in that hand (`film.THINGS`: `"gift"`, `"ball"`, a `"glass"` of wine, a `"mug"` of beer, a `"bottle"`); `None` puts it away. Drinks are drawn half as big again as life, so they read. |
+| more things for `hold()` | A `"book"` (open, in both hands when they are together), a `"phone"`, and loads too big for a hand, `film.LOADS`: a `"block"` (stands on the ground in front of the figure), a `"crate"` and a `"long-crate"` (on the ground, or up in its arms while it plays `lift`). A load goes with its figure; `hold(t, None)` takes it away. |
+| `read(time, seconds=None, seed=None)` | Reads: a book up in both hands, the head down to it, the eyes along the lines, a page turned. If it holds no book it has one (from the start of the film, or just before if it held other things). |
+| `phone(time, seconds=None, seed=None)` | On the phone: the phone goes up beside the head, the head tips to it, a nod now and then. |
+| `push(time, (x, z), thing="block")`, `pull(...)` | Pushes the load in front of it to a place, leaning into it; `pull` hauls it backwards (send it to a place behind it). Both brace their hands on it (`brace`). |
+| `carry(time, (x, z), thing="crate", style="carry")` | Picks the load up, carries it in both arms to a place and puts it down; `style="carry-back"` goes backwards. |
 | `drink(time, thing="glass", seed=None)` | Drinks from what it holds: the drink comes to the mouth and tips, the head goes back. With no drink in its hand it has `thing` from the start of the film. |
 | `pop_cork(time, seed=None)` | Pops the bottle it holds (it has one from the start if it holds none): a shake, the cork flies off, the foam bursts, and the bottle stays open. |
 | `follow(time, leader, gap=0.45, style=None, seed=None)` | Goes where `leader` goes, a moment after and `gap` metres short, in the leader's way of going. Give it after the leader's own `go()` calls. |
@@ -267,6 +315,14 @@ A figure starts standing or seated, as its first pose says, and may change: `sit
 | `check-wrist` | 2.4 | The forearm comes up across the chest, the head goes down to it, a foot taps. |
 | `dust-off` | 2.2 | It brushes itself down: both hands sweep the tummy in turn, the head down to look. |
 | `tummy-rub` | 2.4 | Hungry, or full: a hand goes round and round on the tummy. |
+| `throw` | 2.0 | Winds up and throws what it holds: the thing leaves the hand and flies in an arc. Use `f.throw(time, a, b)`. |
+| `catch` | 1.5 | A hand up for something coming, and a give as it lands. |
+| `lift` | 2.4 | Bends to the load in front of it, holds it in both arms for as long as `seconds` says, and puts it down. |
+| `brace` | 2.0 | Both hands on a load in front of it, braced (what `push` and `pull` play). |
+| `read` | 3.4 | Both hands up with a book, the head down, the eyes going along the lines, a page turned. |
+| `type` | 2.8 | Both hands low in front, tapping in bursts, the eyes on a screen. A mime: there is no keyboard to hold. |
+| `phone` | 3.2 | A hand up beside the head, the head tipped to it, a nod now and then. |
+| `handshake` | 2.2 | The hand of its side out and pumped. Use `f.handshake(time, a, b)`. |
 | `laugh` | 2.0 | A real laugh: the head back, the mouth wide, the body shaking, hands on the tummy. |
 | `cry` | 2.6 | The head down into the hands, the shoulders jerking, a tear. |
 | `sigh` | 2.2 | The chest and shoulders rise as the air goes in, then everything sinks. |
@@ -299,7 +355,7 @@ A figure starts standing or seated, as its first pose says, and may change: `sit
 **Two at once** (calls of the film, not of an actor): `f.high_five(time, a, b)` slaps their hands at a point
 between them; `f.hug(time, a, b)` puts an arm of each round the other (stand them close first);
 `f.pat(time, a, b)` has `a` pat `b` on the head, and `b` like it; `f.toast(time, a, b, c, thing="glass")`
-has two or more touch glasses at a point between them (whoever holds no drink has `thing` from the start); `f.give(time, a, b, "gift")` hands a thing
+has two or more touch glasses at a point between them (whoever holds no drink has `thing` from the start); `f.handshake(time, a, b)` shakes hands at a point between them; `f.throw(time, a, b, "ball")` has `a` throw a thing that flies across and lands in `b`'s hand; `f.carry_together(time, a, b, (x, z))` has the two carry a `"long-crate"` between them to where `a` is sent, whoever is in front walking backwards (stand them 0.8 to 0.95 m apart first); `f.give(time, a, b, "gift")` hands a thing
 over: `a` holds it from the start of the film, and it changes hands as they meet. Each takes `seed=`: the two
 play their own variation but keep the same time. An arm that cannot reach goes as far as it can and is drawn
 the rest (up to `Spec.stretch` times its length: 1.5 for the plush family); the points are taken from where the actors stand at the start of the film.
@@ -320,7 +376,7 @@ without a seed each: give it to a group and no two wave alike. When an action st
 `seed` or `vary`, actions play exactly as written, as they always have.
 
 `examples/film_cheers.py [seed]` pops a bottle, has three toast and drink. `examples/film_together.py [seed]` plays the calls for two, a gift given, a tumble, one following another, and
-a robot's screen. `examples/film_ways.py [seed]` plays the ten ways added on 2026-11-12, with a box to climb; `examples/film_moving.py [seed]` turns two characters to each other, walks, runs, sneaks and skips them, and
+a robot's screen. `examples/film_things.py hands|loads [seed]` plays the throw, the handshake, reading, the phone and typing, and the loads pushed, pulled and carried; `examples/film_ways.py [seed]` plays the ten ways added on 2026-11-12, with a box to climb; `examples/film_moving.py [seed]` turns two characters to each other, walks, runs, sneaks and skips them, and
 sits them down and up again. `examples/film_actions.py talking|reactions|everyday|moving|signs|strong|daily|arms [seed]` plays a
 set of ten on a bear and a robot, each action with a seed of its own, and writes a sheet of them
 (`examples/out/film-<set>-sheet.png`); another seed gives another take.
@@ -390,6 +446,78 @@ It raises `film.FilmError`, with what there is instead, for:
   set is a plain studio. A scene with many figures costs more than the times above (one or two were measured).
 - **Nothing judges how the motion looks.** The tests below only prove that nothing breaks.
 
+## A character for srstudio (`characters.bridge`)
+
+srstudio builds episodes in its own interpreter and reads a 3D set as data: its location record, with each shot's
+camera and where every mark lands in the frame. `characters.bridge` is the cast's half of that: it stands a
+character on a mark of such a record, under that shot's camera, has it act, and writes a **cutout** that an
+episode lays over its picture of the set. srstudio's side (reading the record, laying the clip) is not written yet.
+
+```python
+from characters import bridge
+
+f, anchor = bridge.from_shot("airliner-1080x1920.json", "down-the-aisle", "aisle", "anchor", facing_deg=180)
+anchor.do(0.25, "wave")                                   # an Actor as in any film
+bridge.say_take(anchor, {"id": "take-1", "words": [{"text": "Boa", "start": 0.0, "end": 0.22}]}, at=0.5)
+record = bridge.cutout(f, "out/anchor", seconds=3)        # out/anchor/frames/00000.png ... and out/anchor/clip.json
+```
+
+```
+$PY -m characters.bridge REQUEST.json OUT_DIR             # the same from a file: bridge.parse_request() shows it
+```
+
+- **What it writes.** `frames/%05d.png` from 0: 8-bit RGBA at the film's full size, straight alpha, the film
+  transparent, the character's shadow on the ground in the alpha (black, at most about 0.9 dense), no backdrop.
+  And `clip.json`, the record. A sidecar `render.log` is Blender's and the temperature guard's.
+- **The record** (`characters/clip_record.py`, schema `characters.clip/1.0.0`; the module's text has every field):
+  who drew it (this package's commit, whether its files differed from it, srlocations' version), the frame, the
+  frames a second, the frame count and the duration, the camera under the location record's own field names
+  (`eye_m`, `look_at_m`, `lens_mm`, `gate_mm`, `fit`, `focal_px`, `near_m`, `right`, `up`, `forward`), the
+  location, shot and mark with the SHA-256 of the location record, each figure (who, `at_m`, `facing_deg`,
+  `height_m`, `scale`), each take spoken (id, words, the SHA-256 of its audio if one was given), and for every
+  frame its file, size and SHA-256 and each figure's `feet_m`, `head_m`, `feet_px`, `head_px`,
+  `pixels_per_metre`. `feet_px` is the ground under the figure (it stays down in a jump); `head_px` the middle
+  of the head. `clip_record.load()` is strict: a closed record of finite numbers, at most 16 MB, schema major 1,
+  and every number checked against the others, each refusal with its own error (`ClipFormatError`,
+  `ClipSchemaError`, `ClipCountError`, `ClipCameraError`, `ClipProjectionError`, `ClipValueError`,
+  `ClipFileError`). It imports the standard library only, so srstudio can load the file by its path. `cutout()`
+  reads its own record back, frames and all, before it returns.
+- **Speech.** A take is sreditor's (`words: [{text, start, end}]`, seconds from the take's start);
+  `alignment_from_words()` spreads each word's letters over its span as srstudio's adapter does. The mouth moves;
+  nothing is heard and nothing is subtitled, which are the episode's.
+- **Facing.** A mark's `facing_deg` is `Film.add(yaw=)`: 0 faces +z, 90 faces +x. A mark faces where its location
+  says, which can be away from a shot's camera (the airliner's `aisle` in `down-the-aisle`): `facing_deg=` turns
+  the character.
+- **Height.** A character is drawn at its own size unless `height_m=` says how tall it stands in the set. The
+  camera gives that size (the studio's metre becomes `height_m / stature` of the set's), so every part and the
+  ground scale alike. The figure's own `height` field is refused: it moves the joints and leaves the drawn parts
+  the size they were. A low-poly person is 1.0 m and a mark is recorded for a body of 1.7 m: at its own size it
+  reads as a child among the airliner's seats; with `height_m=1.7` its hair reaches the record's head pixel
+  (row 825 for 826.05).
+- **Where the film is.** The film `from_shot()` gives is in the studio's space: the character at the origin, the
+  camera on +z, where the low-poly finish has its lamps and its shadow. `f.stage.to_studio(point)` and
+  `f.stage.yaw(facing_deg)` bring a point or a direction of the set there; the record is written in the set's.
+
+Measured on the airliner (2026-11-12; `anchor`, 90 frames, 1080x1920, engine 0.9.1 with sr-core 1.9.0): the
+shoes' lowest solid row is 1307 on every frame for a feet pixel of (540, 1300.47): 6.5 px lower, since a
+sole's front edge is about 9 cm nearer the camera than the ground under the root; their middle column is 539
+to 539.5. The solid pixels' box is within 1.5 px of the exported geometry's under the record's camera. Of 1,845
+edge pixels none is nearer the old backdrop's colour than the figure beside it, and clear pixels have no colour.
+A frame is 100 KiB (9.3 MB for the clip). Blender draws a full-size frame in 4.6 s (96 samples; the card
+shared with another render, the temperature guard's pauses left out), and three frames of 540x960 in 6 s with
+its start. Laid by the engine as an `imageSequence` with `alpha="straight"` over a still of the set, the cutout
+is where its frames have it (no move of a pixel fits better).
+
+Not there yet: alpha in the fur, terry and vinyl finishes; a camera that moves; the set in front of the
+character (a seat that should hide its legs: the cutout is one layer); the set's own light and a shadow on
+anything but flat ground at the mark's height; more than `do` actions and one character in a request file
+(the Python way has the whole `Actor`); picking up an interrupted cutout; drawing only the part of the frame the
+character is in (it fills 1.5% of this one). `srlocations.portable.package`, and so `clip.encode`, takes a
+pattern of numbered frames for one missing file: a scene with a cutout is written as it is.
+
+`$PY -m pytest characters/tests/test_bridge.py -q` runs its tests with no render; `LOOKS=1` (or `-m looks`) also
+draws one small cutout through the command line and checks its alpha against its record.
+
 ## Tests
 
 ```
@@ -399,15 +527,36 @@ $PY -m pytest characters/tests -q -m "not slow"     # about 20 seconds: run this
 $PY -m pytest characters/tests -q                   # everything, about 5 minutes: before a render that matters
 ```
 
-Nothing is rendered. The slow ones play every action and every pose on the whole cast; the quick ones cover the
+The slow ones play every action and every pose on the whole cast; the quick ones cover the
 film's checks and errors, the rig, the export, the finishes, sound and subtitles, the slimming and the vinyl people.
+Those render nothing. The looks do:
+
+```
+$PY -m pytest characters/tests/test_looks.py -q             # the five paper stills: 7 seconds, 20 on a busy machine (in both runs above)
+$PY -m pytest characters/tests/test_looks.py -q -m looks    # all ten, Blender's too: 30 to 60 seconds, by how busy the machine is
+$PY characters/tests/lookcheck.py accept [name ...]         # after a change that is meant: new references
+```
+
+**Looks** (`tests/test_looks.py`, `tests/lookcheck.py`): ten reference stills, 480 px, in `tests/looks/` (the bear
+and the bunny in two poses each and Bip on paper, the officer in vinyl, the bear with fur, `sergeant`, `cook` and
+`captain` in low-poly). Each test draws its still again and compares it by number: the pictures are reduced to
+cells of 4 x 4 pixels; `changed` is the share of cells that differ by more than 10 levels of 255 (limit 0.02%),
+`shift` the mean difference of a cell (limit 0.03 levels). Run to run the paper finish is the same to the byte and
+Cycles differs by one level in a third of a percent of the pixels (shift 0.004); an ear turned 3 degrees, a
+missing nose or badge, a bow tie of another colour score ten times the limit or more. The Blender stills are
+skipped unless asked for (`-m looks`, or `LOOKS=1` in any run). A still that differs fails with its name, both
+numbers, the limits and the paths of the new render and a difference picture (reference, new, difference side
+by side) in `tests/looks/new/`. `lookcheck.py accept` takes a still's name, part of it or a finish
+(`accept lowpoly`); `check` prints the scores without pytest; `list` the stills. A new still is a line in
+`lookcheck.LOOKS`, then `accept`. Stills are always drawn on this machine, never on a render worker, and the
+references are this host's GPU's: on another card, accept them again.
 
 ## Underneath
 
 | Module | What it holds |
 |---|---|
 | `film.py` | This SDK. |
-| `motion.py` | `perform()`: the acting between poses, the gaze, the face, the trips. Re-exports `actions` and `speech`. |
+| `motion.py` | `perform()`: the acting between poses, the gaze, the face, the trips. It is a short list of steps, each a private function with its own text: what was asked is read into a `_Script`, then `_key_body`, `_key_things` and `_key_face` key the figure. Re-exports `actions` and `speech`. |
 | `actions.py` | The action library: `Action`, `ACTIONS`, `PAW_ACTIONS`, `GAITS`. A new action goes here. |
 | `speech.py` | Lip-sync: `lipsync()` and its `LIP_*` constants (also reached as `motion.lipsync`). |
 | `staging.py` | Heads together, overlap checks. |
