@@ -11,7 +11,8 @@ options: finish ("fur": real pile on the furry cloth | "terry": the same cloth w
          round from the camera, degrees up, metres away, size, watts, r, g, b]; sky and top = the strength of the
          light from everywhere and of the lamp that casts the floor's shadow; ao, ao_reach = how much and how
          far (metres) surfaces darken each other; satin, satin_rough = the share and the roughness of the gloss on
-         a satin material, see lowpoly_material()),
+         a satin material, see lowpoly_material(); alpha = true writes RGBA frames with a transparent film: the
+         figure and its shadow on the ground and no backdrop, for characters.bridge; low poly only),
          device ("OPTIX" | "CUDA" | "CPU"), samples, scale (share of the film's size that is rendered),
          density (hairs per m2, as a share of 42000), children (hairs drawn per hair grown), radius (hair width).
 Frames already drawn are skipped, so an interrupted render picks up where it stopped.
@@ -751,15 +752,24 @@ if LOWPOLY:      # the figure and its shadow over one flat colour, as on a model
     # can be set; left to the floor it is as strong as the key and lights every facet alike from below
     floor.visible_diffuse = floor.visible_glossy = False
     scene.render.film_transparent = True
-    scene.use_nodes = True
-    tree = scene.node_tree
-    tree.nodes.clear()
-    layers, over, out = (tree.nodes.new(n) for n in ("CompositorNodeRLayers", "CompositorNodeAlphaOver", "CompositorNodeComposite"))
-    gain = 2.0 ** -scene.view_settings.exposure                 # the exposure is applied after this: undo it here
-    over.inputs[1].default_value = [c * gain for c in srgb(opt.get("backdrop", "#FDECD9"))[:3]] + [1.0]
-    tree.links.new(layers.outputs["Image"], over.inputs[2])
-    tree.links.new(over.outputs["Image"], out.inputs["Image"])
-    scene.render.image_settings.color_mode = "RGB"
+    if opt.get("alpha"):
+        # A cutout for another film (characters.bridge): the film stays transparent and the frame is written with
+        # its alpha, straight (PNG's own). No backdrop is laid under it, so no backdrop colour is mixed into the
+        # figure's edge; the floor is still there as a shadow catcher, and the figure's shadow on the ground is
+        # black with the alpha of how dark it is. No dither: it puts noise in the colour of clear pixels, which
+        # nothing sees and which made a frame nine times the bytes (919 KiB against 96 for one figure in 1080x1920).
+        scene.render.image_settings.color_mode = "RGBA"
+        scene.render.dither_intensity = 0.0
+    else:
+        scene.use_nodes = True
+        tree = scene.node_tree
+        tree.nodes.clear()
+        layers, over, out = (tree.nodes.new(n) for n in ("CompositorNodeRLayers", "CompositorNodeAlphaOver", "CompositorNodeComposite"))
+        gain = 2.0 ** -scene.view_settings.exposure                 # the exposure is applied after this: undo it here
+        over.inputs[1].default_value = [c * gain for c in srgb(opt.get("backdrop", "#FDECD9"))[:3]] + [1.0]
+        tree.links.new(layers.outputs["Image"], over.inputs[2])
+        tree.links.new(over.outputs["Image"], out.inputs["Image"])
+        scene.render.image_settings.color_mode = "RGB"
 scene.render.image_settings.compression = 15
 
 dst.mkdir(parents=True, exist_ok=True)
