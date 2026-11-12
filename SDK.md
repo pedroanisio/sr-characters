@@ -162,7 +162,7 @@ in `sr-data/characters_legacy/` for the videos made with them.
 | `music(path, at=0, gain=-8)` | Music under the film; it gives way to voices by itself. |
 | `subtitle(text, start, end)` | A subtitle of your own (what an actor says is subtitled already). |
 | `still(out, size=None)` | A picture of the start. Take it before `render()`. |
-| `render(out, seconds, size=None, finish="paper", quality="standard")` | The clip, in our drawn look or as soft toys with fur (see "Two finishes"). |
+| `render(out, seconds, size=None, finish="paper", quality="standard", workers=None)` | The clip, in our drawn look or as soft toys with fur (see "Two finishes"). `workers=True` also renders the paper finish on the other machines (see "Limits"). |
 | `export(folder, seconds)` | The film as plain geometry, one file a frame, for another renderer. |
 | `strip(out, columns=6, rows=2, width=480, start=0, seconds=None)` | Frames of the rendered clip side by side. `film.strip(source, out, ...)` does the same for any video file. |
 | `perform(seconds)` | The acting without the render (`render()` calls it). For adding keys of your own to `f.loc` before rendering. |
@@ -366,6 +366,13 @@ It raises `film.FilmError`, with what there is instead, for:
 - **Travel does not go round other characters.** A path through another figure is refused, not corrected: send
   it somewhere clear. Smaller contacts (neighbours' ears or paws crossing while they act) are allowed, printed
   when the film is performed and kept in `film.contacts`: look at them in the strip.
+- **Rendering on several machines is asked for, not the default.** `render(out, workers=True)` (and
+  `clip.encode(..., workers=True)`) has the engine on three other machines render part of the video: 14 s where
+  this machine alone takes 30 s (509 frames at 1080x1920). A machine that is off is left out, with a note. The
+  machines' GPUs do not draw the same pixels (36 to 39 dB apart, along outlines), so a video that will be measured
+  or compared frame by frame is rendered with `workers=False`; the tests render here alone. Only the paper finish
+  is shared: Blender's fur and terry render on this machine. How the workers are started and added is in
+  `/home/dev/data/scene-render-patched/README.md`.
 - **A scene file may hold 256 MB**, with our build of the engine (`/home/dev/data/scene-render-patched`: 0.8.0
   with the document limit raised from 64 MiB to 256 and from 4 to 16 million XML nodes; its frames are identical
   to the official binary's). Eight figures talking and acting for 8 seconds at 24 fps make 63 MB (most of the

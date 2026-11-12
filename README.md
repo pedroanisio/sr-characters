@@ -180,9 +180,9 @@ in one call with `clip.encode(renderer, scene, out)`. `encode` asks the engine f
 (`encode --parallel`), which halves the time on one GPU (51 s to 26 s for 509 frames at 1080x1920; 6 give no
 more); the picture matches the serial one to 50 dB and the sound to the sample. A scene that runs the engine
 itself passes `"--parallel", str(clip.PARALLEL)`. `clip.encode(..., workers=True)` and
-`Film.render(out, workers=True)` also hand chunks of the video to the engine on the second machine (`scene-render
-serve` on pve-note-1, which renders two chunks at once; the hosts and the token are in `clip.FARM`): 30 s to about
-20 s on the same 509 frames. A scene that runs the engine itself passes `env=clip.engine_env(True)`. With the worker
+`Film.render(out, workers=True)` also hand chunks of the video to the engine on three other machines (`scene-render
+serve` on pve-note-1, pve-dev-note-01 and pve-desk-1, two chunks at once each; the hosts and the token are in
+`clip.FARM`): 30 s to 14 s on the same 509 frames. A scene that runs the engine itself passes `env=clip.engine_env(True)`. With the worker
 off the render is local, with a note. The two GPUs differ along outlines (36.8 dB), so frames that are measured or
 compared are rendered with `workers=False`; without the argument the environment decides (`SR_WORKERS`,
 `SR_WORKER_TOKEN`). `/home/dev/data/scene-render-patched/README.md` says how to start the worker. It drops the indentation (each element keeps its line: the
