@@ -943,6 +943,36 @@ def gesture(who: str, kind: str) -> dict[str, float]:
         targets = {"right": off("right", dx, dy, dz)}
     else:
         targets = named[kind]
+    # A figure with a hand of its own (Spec.hand_length) draws it on from the forearm, the way the forearm points.
+    # The wrists above take that hand to rise to the face leaning back onto it (0.85 of its length up, 0.35 back):
+    # but the arm is solved with its elbow down and out, so the forearm reaches a wrist held before the face going
+    # up, in and FORWARD, and the fingers end a hand's length in front of the chin or the mouth; and the solve is
+    # made in the relaxed pose, while the figure stands in its stance (the head tipped back, the shoulders lowered).
+    # So for such a figure the wrists of the gestures that put a hand to the face are placed on the figure as it
+    # stands, where a hand that goes on from the forearm ends on the face. Each: the place on the face (across and
+    # up the head, shares of its radii), and where the wrist is held for it. "chest": in front of its own shoulder
+    # (times the shoulder's distance from the middle) and held to the chest (1.04 of the body's depth before the
+    # shoulder, and no nearer than so many hands' lengths before the face), so many hands' lengths under the place:
+    # the fingers come up and in to it. "face": so many hands' lengths out from the place, under it and before it:
+    # the hand stands before the face, on the nose. (Measured on the low-poly builds; what is left is in the
+    # hand itself: its thumb stands toward the face, and its wrist does not bend.)
+    touch = {"chin": (0.0, -0.21, "chest", 1.0, 1.02, 0.13), "cuddle": (0.0, -0.21, "chest", 1.0, 1.02, 0.13),
+             "lips": (0.0, -0.1, "chest", 1.05, 1.05, 0.21), "gasp": (0.0, -0.1, "chest", 1.05, 1.05, 0.21),
+             "eyes": (0.32, 0.18, "face", 0.0, 0.85, 0.42), "brow": (0.0, 0.325, "face", 0.0, 0.95, 0.46)}
+    if hand and kind in touch:
+        fx, fy, how, across, under, ahead = touch[kind]
+        stood = MascotFigure(pose={**RELAXED, **SPECS[who].stance}, who=who).frames()
+        arm_now, arm_then = stood["right_upper_arm"], fr["right_upper_arm"]
+        face = stood["head"].apply(fr["head"].undo(Vec3(fx * r[0], c[1] + fy * r[1] + lift, c[2] + r[2])))
+        if how == "chest":
+            wrist = Vec3(across * arm_now.position.x, face.y - under * hand,
+                         max(face.z + ahead * hand, arm_now.position.z + 1.04 * SPECS[who].body[1][2]))
+        else:
+            wrist = Vec3(face.x + across * hand, face.y - under * hand, face.z + ahead * hand)
+        right = arm_then.apply(arm_now.undo(wrist))        # where the solve, in the relaxed pose, has that point
+        # (a left hand goes where the right one's mirror image is: the two arms are solved alike, though the head
+        # of the stance leans a little to one side; a hair's difference there swings an elbow a long way)
+        targets = {side: right if side == "right" else Vec3(-right.x, right.y, right.z) for side in targets}
     stretch = {}
     for side, point in targets.items():
         far = Vec3.of(point)

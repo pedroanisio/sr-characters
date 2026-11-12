@@ -837,3 +837,48 @@ def test_the_tall_build_stands_on_the_ground_with_its_hands_at_the_measured_heig
         assert 0.13 < height - chin < 0.17 and abs(chin - 0.845) < 0.015
     finally:
         leave()
+
+
+def test_a_hand_put_to_the_face_ends_on_it_on_every_build():
+    """A person's hand is drawn on from the forearm (Spec.hand_length says how long it is), where a toy has a ball
+    on its wrist. The gestures that put a hand to the face (mascots3d.gesture) place such a hand's wrist, on the
+    figure as it stands, where the fingers end on the face: on each build the fingertips come to the chin and to the
+    mouth (they stopped a hand's length in front of them); over the eyes and on the brow the fingers lie where the
+    camera sees them on the eye and the brow, in front of the face and near it; and the two hands of a gesture
+    made with both are each other's mirror."""
+    from characters import lowpoly3d as lp, mascots3d as m
+    from characters.doodle import Pose
+    fingers = ("index", "middle", "ring", "little")
+    (hx, hy, _hz), (rx, ry, _rz) = lp.HEAD
+    people = ("sergeant", "captain", "anchor")
+    assert {lp.PEOPLE[who].body for who in people} == {"man", "woman", "tall"}       # the three builds
+    for who in people:
+        person = lp.PEOPLE[who]
+        face = lp.FACES[person.face] if person.face else lp.FACE
+        assert m.SPECS[who].hand_length == lp.HAND_REACH * lp.BODIES[person.body].hand > 0.0
+        for kind in ("chin", "lips", "eyes", "brow", "cuddle", "gasp"):
+            arms = m.gesture(who, kind)
+            fig = m.figure(who, Pose(joints=tuple(arms.items())))
+            k = lp.Parts(fig, fig.frames(), person)
+            skull = face.skull or k.b.skull
+            chin = 0.5 * (face.mouth_y + (skull.s[0][0] - hy) / ry)      # between the mouth and the jaw's lowest row
+            fx, fy = {"chin": (0.0, chin), "cuddle": (0.0, chin), "lips": (0.0, face.mouth_y), "gasp": (0.0, face.mouth_y),
+                      "eyes": (face.eye_x, face.eye_y), "brow": (0.0, face.brow_at[1])}[kind]
+            parts = {p.name: p for p in fig.build() if not isinstance(p, m.Contact)}
+            both = kind in ("eyes", "cuddle", "gasp")
+            for side, sx in ((("r", 1), ("l", -1)) if both else (("r", 1),)):
+                x, y = hx + sx * fx * rx, hy + fy * ry
+                mark = tuple(k.head.point((x, y, skull.front(x, y))))    # the place on the face, as the figure stands
+                tips = [_corners(parts[f"arm_{side}/{f}-tip"])[-1][0] for f in fingers]
+                corners = [p for f in fingers for n in (f, f"{f}-tip") for row in _corners(parts[f"arm_{side}/{n}"]) for p in row]
+                near = min(math.dist(p, mark) for p in corners)
+                if kind in ("eyes", "brow"):     # seen from the front the fingers are on the place; they are before it
+                    over = [p for p in corners if math.hypot(p[0] - mark[0], p[1] - mark[1]) < 0.015]
+                    assert over and min(p[2] for p in over) > mark[2] and near < 0.055, (who, kind, side, near)
+                else:                            # a fingertip is at it (the middle of a tip's end; a finger is 2 cm thick)
+                    tip = min(math.dist(t, mark) for t in tips)
+                    assert tip < 0.04 and near < 0.03, (who, kind, side, tip, near)
+            if both:
+                assert all(abs(arms[n] - arms[n.replace("right_", "left_")]) < 0.01 for n in arms if n.startswith("right_")), (who, kind)
+    # (only a figure with a hand length is placed so: the plush toys and the vinyl people have none)
+    assert m.SPECS["bear"].hand_length == 0.0 == m.SPECS["officer"].hand_length
